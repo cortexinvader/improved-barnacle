@@ -42,30 +42,6 @@
       "phone": "+20 000 000 0000",
       "role": "admin",
       "departmentName": "All Departments"
-    },
-    {
-      "username": "Add",
-      "password": "$2b$10$Z30A8dveQ3JbUhkn.TJF3Ok3JG2/SOUCtolXNC5y1jfFymMA/WZfi",
-      "phone": "+2348088941798",
-      "regNumber": "Add",
-      "role": "student",
-      "departmentName": "Information Systems"
-    },
-    {
-      "username": "Hh",
-      "password": "$2b$10$yKN91gahmMRyQGCvOrcyr.3SRhGK1kL0mtP2z1i6pzqq9QEgju6v2",
-      "phone": "+2348088941798",
-      "regNumber": "Hh",
-      "role": "student",
-      "departmentName": "Software Engineering"
-    },
-    {
-      "username": "H",
-      "password": "$2b$10$ITvO26lDvlHbjc/U3iDdj.de1u4FFHVAtwKBl0t4.3mRKJHJYD.FO",
-      "phone": "2348088941798",
-      "regNumber": "H",
-      "role": "student",
-      "departmentName": "Information Systems"
     }
   ]
 }
