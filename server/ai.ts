@@ -1,7 +1,7 @@
-
 import type { Express } from "express";
 import { db } from "./db";
 import { chatMessages } from "../shared/schema";
+import fs from "fs/promises";
 
 interface CustomAIRequest {
   message: string;
@@ -9,40 +9,26 @@ interface CustomAIRequest {
   context?: string;
 }
 
-interface CustomAIResponse {
-  response: string;
-}
-
 export async function sendToCustomAI(
   message: string,
   context?: string
 ): Promise<string> {
-  // Load config from config.json
-  const config = JSON.parse(
-    await import("fs").then(fs => fs.promises.readFile("config.json", "utf-8"))
-  );
-  
-  const API_ENDPOINT = config.aiApi.endpoint;
-
   try {
-    const response = await fetch(API_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message,
-        context,
-        // Add any other parameters your API needs
-      }),
-    });
+    // Load API endpoint from config.json
+    const configData = await fs.readFile("config.json", "utf-8");
+    const config = JSON.parse(configData);
+    const API_ENDPOINT = config.aiApi.endpoint;
+
+    // Pollinations only supports GET
+    const encodedMsg = encodeURIComponent(context ? `${context} ${message}` : message);
+    const response = await fetch(`${API_ENDPOINT}/${encodedMsg}`);
 
     if (!response.ok) {
       throw new Error(`AI API request failed: ${response.statusText}`);
     }
 
-    const data: CustomAIResponse = await response.json();
-    return data.response;
+    const data = await response.text();
+    return data.trim();
   } catch (error) {
     console.error("Custom AI API error:", error);
     throw new Error("Failed to get AI response");
