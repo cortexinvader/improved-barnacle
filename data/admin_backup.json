@@ -1,0 +1,71 @@
+{
+  "backupCreated": true,
+  "users": [
+    {
+      "username": "faculty_gov",
+      "password": "$2b$10$m99dyWLHG5M3b8ZSIkkhD.dFv5KEasXX2MKFOFlR9a8SgPqAKszXq",
+      "phone": "+20 000 000 0000",
+      "role": "faculty-governor",
+      "departmentName": "All Departments"
+    },
+    {
+      "username": "ce_governor",
+      "password": "$2b$10$hKerDNVAZp5uqqi4CXulOuR30XzP.i3rr/pu939JfoMEG6zqC/i4K",
+      "phone": "+20 000 000 0000",
+      "role": "department-governor",
+      "departmentName": "Computer Engineering"
+    },
+    {
+      "username": "is_governor",
+      "password": "$2b$10$rREc1tDcNhMYMiCMDmzMsOFPiadWPok0/vBuyRv3oEt8cD0pL8jpS",
+      "phone": "+20 000 000 0000",
+      "role": "department-governor",
+      "departmentName": "Information Systems"
+    },
+    {
+      "username": "se_governor",
+      "password": "$2b$10$wsHwemxvb.MDy/GS8eV5V.izgcGnxGZoCtwmhIA8MSsLYIVpN3Xs.",
+      "phone": "+20 000 000 0000",
+      "role": "department-governor",
+      "departmentName": "Software Engineering"
+    },
+    {
+      "username": "ne_governor",
+      "password": "$2b$10$M9oLPE1Gmk8MnH3YeTNrXOkO4npInzT8lS6gMyb8iYnOSURZVCrpC",
+      "phone": "+20 000 000 0000",
+      "role": "department-governor",
+      "departmentName": "Network Engineering"
+    },
+    {
+      "username": "admin",
+      "password": "$2b$10$gAFtCXf3JrR4ojk9amTMUefCGSYuSzbVo1E02A0XFAjaLLalFfjUq",
+      "phone": "+20 000 000 0000",
+      "role": "admin",
+      "departmentName": "All Departments"
+    },
+    {
+      "username": "Add",
+      "password": "$2b$10$Z30A8dveQ3JbUhkn.TJF3Ok3JG2/SOUCtolXNC5y1jfFymMA/WZfi",
+      "phone": "+2348088941798",
+      "regNumber": "Add",
+      "role": "student",
+      "departmentName": "Information Systems"
+    },
+    {
+      "username": "Hh",
+      "password": "$2b$10$yKN91gahmMRyQGCvOrcyr.3SRhGK1kL0mtP2z1i6pzqq9QEgju6v2",
+      "phone": "+2348088941798",
+      "regNumber": "Hh",
+      "role": "student",
+      "departmentName": "Software Engineering"
+    },
+    {
+      "username": "H",
+      "password": "$2b$10$ITvO26lDvlHbjc/U3iDdj.de1u4FFHVAtwKBl0t4.3mRKJHJYD.FO",
+      "phone": "2348088941798",
+      "regNumber": "H",
+      "role": "student",
+      "departmentName": "Information Systems"
+    }
+  ]
+}

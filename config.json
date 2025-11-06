@@ -1,0 +1,57 @@
+{
+  "facultyGovernor": {
+    "username": "faculty_gov",
+    "password": "faculty123",
+    "phone": "+20 000 000 0000",
+    "department": "All Departments"
+  },
+  "departmentGovernors": [
+    {
+      "username": "ce_governor",
+      "password": "ce123",
+      "phone": "+20 000 000 0000",
+      "department": "Computer Engineering"
+    },
+    {
+      "username": "is_governor",
+      "password": "is123",
+      "phone": "+20 000 000 0000",
+      "department": "Information Systems"
+    },
+    {
+      "username": "se_governor",
+      "password": "se123",
+      "phone": "+20 000 000 0000",
+      "department": "Software Engineering"
+    },
+    {
+      "username": "ne_governor",
+      "password": "ne123",
+      "phone": "+20 000 000 0000",
+      "department": "Network Engineering"
+    }
+  ],
+  "admin": {
+    "username": "admin",
+    "password": "admin123",
+    "phone": "+20 000 000 0000"
+  },
+  "departments": [
+    "Computer Engineering",
+    "Information Systems",
+    "Software Engineering",
+    "Network Engineering"
+  ],
+  "aiApi": {
+    "endpoint": "https://api.your-ai-service.com/v1/chat"
+  },
+  "developer": {
+    "name": "CIE Portal Development Team",
+    "contact": "support@cieportal.edu"
+  },
+  "system": {
+    "imageExpiryHours": 3,
+    "maxUploadSizeMB": 10,
+    "sessionTimeoutMinutes": 480
+  }
+}
