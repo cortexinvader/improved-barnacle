@@ -43,11 +43,11 @@
     "Network Engineering"
   ],
   "aiApi": {
-    "endpoint": "https://api.your-ai-service.com/v1/chat"
+    "endpoint": "https://text.pollinations.ai"
   },
   "developer": {
-    "name": "CIE Portal Development Team",
-    "contact": "support@cieportal.edu"
+    "name": "Cortex Invader",
+    "contact": "+2348088941798"
   },
   "system": {
     "imageExpiryHours": 3,
