@@ -45,7 +45,7 @@ interface BackupData {
     phone?: string;
     regNumber?: string;
     role: string;
-    departmentName: string;
+    departmentName?: string;
   }>;
 }
 
@@ -125,22 +125,33 @@ async function restoreUsersFromBackup() {
     const backupData = await fs.readFile(backupPath, "utf-8");
     const backup: BackupData = JSON.parse(backupData);
 
-    if (!backup.backupCreated || backup.users.length === 0) {
+    if (!backup.backupCreated || !Array.isArray(backup.users) || backup.users.length === 0) {
       console.log("  ℹ No backup to restore");
       return;
     }
+
+    // helper to detect bcrypt hashes (e.g. $2b$10$...)
+    const isBcryptHash = (s?: string) => {
+      if (!s) return false;
+      return /^\$2[aby]\$\d{2}\$/.test(s);
+    };
 
     let restoredCount = 0;
     for (const userData of backup.users) {
       const existing = await storage.getUserByUsername(userData.username);
       if (!existing) {
-        // Ensure password is hashed if it's not already (assuming backup might store plain text for simplicity or hashed)
-        const passwordToStore = userData.password ? await hashPassword(userData.password) : undefined;
+        // If the backup already contains a bcrypt hash (starts with $2...), store it as-is.
+        // If the backup password is plaintext, hash it now.
+        const passwordToStore: string | undefined = userData.password
+          ? (isBcryptHash(userData.password) ? userData.password : await hashPassword(userData.password))
+          : undefined;
+
         await storage.createUser({
-          ...userData,
+          username: userData.username,
           password: passwordToStore,
-          phone: userData.phone || null, // Ensure phone is handled
+          phone: userData.phone || null,
           regNumber: userData.regNumber || null,
+          role: userData.role as any,
           departmentName: userData.departmentName || "Unknown"
         });
         restoredCount++;
@@ -150,7 +161,6 @@ async function restoreUsersFromBackup() {
     console.log(`  ✓ Restored ${restoredCount} users from backup`);
   } catch (error) {
     console.log("  ℹ No backup file found or error reading backup, continuing without restoring users.");
-    // This is not a critical error, so we can just log and continue.
   }
 }
 
