@@ -1,37 +1,34 @@
 # Multi-stage Dockerfile for improved-barnacle
-# - Patches server/vite.ts so production serving points to dist/public (fixes "could not find build directory" error).
-# - Installs dependencies and runs the repo build (vite + esbuild) in the build stage.
-# - Copies built artifacts and full node_modules into the runtime image so drizzle-kit (dev dep) is available
-#   and migrations can be run at container start.
-# - Entrypoint optionally runs migrations (npm run db:push) if DATABASE_URL is set, then starts node dist/index.js.
+# - Builds the client (Vite) and bundles the server (esbuild) via the repo's "build" script.
+# - Copies built artifacts, node_modules and required config files into a runtime image.
+# - Entrypoint creates a drizzle.config.json from DATABASE_URL (if provided), runs migrations (optional),
+#   then starts the server (node dist/index.js).
 #
-# Notes:
-# - The server expects the built client at dist/public (vite.config.ts sets outDir to dist/public).
-# - This Dockerfile leaves migration optional at container start; you can enforce failure on migration error by
-#   changing the entrypoint behavior.
-# - For persistent uploads, switch file storage to an external object store (S3/R2). Render filesystem is ephemeral.
+# This Dockerfile addresses the runtime errors you hit:
+# - creates a drizzle.config.json at container start so drizzle-kit push can run,
+# - includes config.json and shared schema so the app can read config and migrations can reference schema.ts,
+# - patches server/vite.ts at build time to serve the correct dist/public path in production.
+#
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Install build tools used by some native deps (if needed)
+# Tools needed to build some deps and run scripts
 RUN apk add --no-cache python3 make g++ bash ca-certificates
 
-# Copy package manifests first for better layer caching
+# Copy package manifests for better caching
 COPY package.json package-lock.json ./
 
-# Install all dependencies (dev + prod) so build tools like vite, esbuild, drizzle-kit are available
+# Install all deps (dev + prod) so build tools (vite, esbuild, drizzle-kit) are available
 RUN npm ci
 
-# Copy the rest of the repository
+# Copy full repo
 COPY . .
 
-# Patch server/vite.ts to serve dist/public in production (fix production static path).
-# This replaces: path.resolve(import.meta.dirname, "public")
-# with:              path.resolve(import.meta.dirname, "..", "dist", "public")
-# Use sed -i which is available in alpine busybox.
+# Patch server/vite.ts at build time so production uses ../dist/public as the static folder
+# (fixes "Could not find the build directory" runtime error)
 RUN sed -i 's|path.resolve(import.meta.dirname, \"public\")|path.resolve(import.meta.dirname, \"..\", \"dist\", \"public\")|g' server/vite.ts || true
 
-# Build the client (vite) and bundle the server (esbuild) via the project's build script
+# Build client and bundle server (uses package.json "build" script)
 RUN npm run build
 
 ############################
@@ -43,14 +40,24 @@ WORKDIR /app
 # Small runtime extras
 RUN apk add --no-cache bash ca-certificates
 
-# Copy built artifacts and node_modules from the build stage
+# Copy built artifacts and full node_modules from build stage.
+# We copy full node_modules so drizzle-kit (dev tool) is available in the runtime for migrations.
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/node_modules ./node_modules
 
-# Copy package manifests in case runtime needs them
+# Copy config.json, shared schema, data directory, uploads etc so runtime has files the app expects.
+COPY --from=build /app/config.json ./config.json
+COPY --from=build /app/shared ./shared
+COPY --from=build /app/data ./data
+COPY --from=build /app/uploads ./uploads
+
+# Copy package manifests (kept for clarity/debugging)
 COPY package.json package-lock.json ./
 
-# Create an embedded entrypoint script inside the image (no separate file required)
+# Create an entrypoint that will:
+#  - create drizzle.config.json dynamically from DATABASE_URL (if provided),
+#  - run migrations via `npm run db:push` (drizzle-kit),
+#  - then start the server: node dist/index.js
 RUN mkdir -p /usr/local/bin
 RUN cat > /usr/local/bin/docker-entrypoint.sh <<'SH'
 #!/usr/bin/env sh
@@ -58,33 +65,48 @@ set -e
 
 echo "==> Container start: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
 
-# If DATABASE_URL is provided, attempt to run migrations.
+# If DATABASE_URL provided, create drizzle.config.json for drizzle-kit and attempt migrations.
 if [ -n "${DATABASE_URL}" ]; then
-  echo "==> DATABASE_URL detected, attempting to run migrations (npm run db:push)..."
-  # npm run db:push uses drizzle-kit; node-postgres SSL options are controlled by server/db.ts via DB_SSL env.
+  echo "==> DATABASE_URL detected, creating drizzle.config.json..."
+  cat > /app/drizzle.config.json <<JSON
+{
+  "out": "./migrations",
+  "schema": "./shared/schema.ts",
+  "dialect": "postgresql",
+  "dbCredentials": {
+    "url": "${DATABASE_URL}"
+  }
+}
+JSON
+
+  echo "==> Running migrations (npm run db:push)..."
+  # Run migrations; if they fail we continue to start server but we log the failure.
+  # Change to `exit 1` here if you prefer the container to fail on migration errors.
   if npm run db:push; then
     echo "==> Migrations ran successfully."
   else
-    # If migrations fail, continue to start the server but log the failure. You can change this to exit 1
-    # if you prefer the container to fail on migration errors.
-    echo "==> Migrations failed or are not configured; continuing to start server."
+    echo "==> Migrations failed or drizzle-kit is not configured; continuing to start server."
   fi
 else
   echo "==> No DATABASE_URL found; skipping migrations."
 fi
 
-# Start the server (expects dist/index.js produced by esbuild)
+# Ensure config.json exists and is readable; warn if missing (server will also error if missing).
+if [ ! -f /app/config.json ]; then
+  echo "WARNING: config.json not found at /app/config.json. The app expects this file."
+fi
+
 echo "==> Starting server: node dist/index.js"
 exec node dist/index.js
 SH
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Default environment (can be overridden on Render)
+# Default to production. Render will still set NODE_ENV or PORT env vars as needed.
 ENV NODE_ENV=production
 
-# Expose default port (useful locally). Render ignores EXPOSE.
+# Useful for local runs; Render ignores EXPOSE
 EXPOSE 5000
 
-# Entrypoint runs migrations if DB present, then starts the server
+# Start the entrypoint
 CMD ["/usr/local/bin/docker-entrypoint.sh"]
