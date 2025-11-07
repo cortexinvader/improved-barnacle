@@ -67,8 +67,8 @@
       "type": "department",
       "notificationType": "cruise",
       "title": "Notification",
-      "content": "Hello Everyone what's up",
-      "postedBy": "is_governor",
+      "content": "Hello Everyone what's up, 😁 It's Nice to have you here.",
+      "postedBy": "admin",
       "targetDepartmentName": "Information Systems",
       "reactions": {
         "heart": 2
