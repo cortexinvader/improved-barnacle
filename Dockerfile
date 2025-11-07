@@ -66,18 +66,13 @@ if [ ! -f /app/config.json ]; then
   echo "WARNING: config.json not found at /app/config.json. The app expects this file."
 fi
 
-# 2) If DATABASE_URL provided, run migrations using the existing drizzle.config.ts
-if [ -n "${DATABASE_URL}" ]; then
-  echo "==> DATABASE_URL detected. Running migrations..."
-  # drizzle-kit is in devDependencies from build stage, so it's available in node_modules
-  if npm run db:push 2>&1 | tee /tmp/migration.log; then
-    echo "==> Migrations completed successfully."
-  else
-    echo "==> Warning: Migrations encountered issues. Check logs above."
-    echo "==> Continuing to start server (tables may need manual setup)."
-  fi
+# 2) Run migrations for SQLite database
+echo "==> Running database migrations..."
+if npm run db:push 2>&1 | tee /tmp/migration.log; then
+  echo "==> Migrations completed successfully."
 else
-  echo "==> No DATABASE_URL found; skipping migrations."
+  echo "==> Warning: Migrations encountered issues. Check logs above."
+  echo "==> Continuing to start server (tables may need manual setup)."
 fi
 
 echo "==> Starting server: node dist/index.js"
