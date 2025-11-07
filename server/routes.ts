@@ -174,6 +174,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.user = userWithoutPassword as User;
       req.session.userId = user.id; // Store userId in session
 
+      // Update local backup file immediately (without sending to Telegram)
+      try {
+        await generateAdminBackup();
+        console.log("✓ Local backup updated after signup");
+      } catch (error) {
+        console.error("✗ Local backup update failed after signup:", error);
+      }
+
       res.json({ user: userWithoutPassword });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -373,6 +381,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: { notificationId: notification.id, type: notificationType },
       });
 
+      // Update local backup file immediately (without sending to Telegram)
+      try {
+        await generateAdminBackup();
+        console.log("✓ Local backup updated after notification creation");
+      } catch (error) {
+        console.error("✗ Local backup update failed after notification:", error);
+      }
+
       res.json(notification);
     } catch (error: any) {
       console.error("Notification posting error:", error);
@@ -484,6 +500,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: "NOTIFICATION_DELETED",
         details: { notificationId: req.params.id, title: notification.title },
       });
+
+      // Update local backup file immediately (without sending to Telegram)
+      try {
+        await generateAdminBackup();
+        console.log("✓ Local backup updated after notification deletion");
+      } catch (error) {
+        console.error("✗ Local backup update failed after deletion:", error);
+      }
 
       res.json({ message: "Notification deleted successfully" });
     } catch (error: any) {
@@ -637,6 +661,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: "USER_DELETED",
         details: { deletedUserId: req.params.id, deletedUsername: user.username },
       });
+
+      // Update local backup file immediately (without sending to Telegram)
+      try {
+        await generateAdminBackup();
+        console.log("✓ Local backup updated after user deletion");
+      } catch (error) {
+        console.error("✗ Local backup update failed after user deletion:", error);
+      }
 
       res.json({ message: "User deleted successfully" });
     } catch (error: any) {
