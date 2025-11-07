@@ -1,5 +1,6 @@
 {
   "backupCreated": true,
+  "timestamp": "2025-11-07T16:04:34.947Z",
   "users": [
     {
       "username": "faculty_gov",
@@ -42,6 +43,51 @@
       "phone": "+20 000 000 0000",
       "role": "admin",
       "departmentName": "All Departments"
+    },
+    {
+      "username": "Cortex",
+      "password": "$2b$10$GbqgpoG54i6hjcyZogMTxOoyYd/rUura5TS67MPK4wkiSPhP5GjpG",
+      "phone": "+2348088941798",
+      "regNumber": "C",
+      "role": "student",
+      "departmentName": "Software Engineering"
+    },
+    {
+      "username": "C",
+      "password": "$2b$10$YvSmZJZrkhC5ilwPa3zxZeuRaElZn6HlefAxM3nmbml8El84QM2aC",
+      "phone": "+2348088941798",
+      "regNumber": "C",
+      "role": "student",
+      "departmentName": "Network Engineering"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "0a29aed3-8257-4cd0-aa89-a833664d0685",
+      "type": "department",
+      "notificationType": "cruise",
+      "title": "Notification",
+      "content": "Hello Everyone what's up",
+      "postedBy": "is_governor",
+      "targetDepartmentName": "Information Systems",
+      "reactions": {
+        "heart": 2
+      },
+      "comments": [
+        {
+          "id": "1762529001501",
+          "author": "is_governor",
+          "content": "Nice",
+          "timestamp": "2025-11-07T15:23:21.501Z"
+        },
+        {
+          "id": "1762529294953",
+          "author": "is_governor",
+          "content": "Great job bro",
+          "timestamp": "2025-11-07T15:28:14.953Z"
+        }
+      ],
+      "createdAt": "2025-11-07T15:22:15.850Z"
     }
   ]
 }
