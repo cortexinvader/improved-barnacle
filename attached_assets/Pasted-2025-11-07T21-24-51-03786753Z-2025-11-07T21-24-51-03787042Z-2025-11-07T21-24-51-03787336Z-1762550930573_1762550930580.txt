@@ -1,0 +1,50 @@
+2025-11-07T21:24:51.03786753Z         ^
+2025-11-07T21:24:51.03787042Z 
+2025-11-07T21:24:51.03787336Z Error: Dynamic require of "memorystore" is not supported
+2025-11-07T21:24:51.03787664Z     at file:///app/dist/index.js:6:9
+2025-11-07T21:24:51.037879391Z     at registerRoutes (file:///app/dist/index.js:718:23)
+2025-11-07T21:24:51.037882191Z     at async file:///app/dist/index.js:1561:18
+2025-11-07T21:24:51.037884841Z 
+2025-11-07T21:24:51.037887651Z Node.js v20.19.5
+2025-11-07T21:25:11.000744785Z ==> Container start: 2025-11-07T21:25:11Z
+2025-11-07T21:25:11.001445079Z ==> No admin backup provided via BACKUP or BACKUP_FILE; using /app/data/admin_backup.json from image (if present)
+2025-11-07T21:25:11.00152409Z ==> DATABASE_URL detected. Running migrations...
+2025-11-07T21:25:12.327119912Z 
+2025-11-07T21:25:12.327142753Z > rest-express@1.0.0 db:push
+2025-11-07T21:25:12.327145983Z > drizzle-kit push
+2025-11-07T21:25:12.327147653Z 
+2025-11-07T21:25:13.835376554Z No config path provided, using default 'drizzle.config.ts'
+2025-11-07T21:25:13.836609737Z Reading config file '/app/drizzle.config.ts'
+2025-11-07T21:25:17.958338469Z [⣷] Pulling schema from database...
+2025-11-07T21:25:18.025547802Z [✓] Pulling schema from database...
+2025-11-07T21:25:18.440916517Z [✓] Changes applied
+2025-11-07T21:25:18.625437982Z ==> Migrations completed successfully.
+2025-11-07T21:25:18.625457622Z ==> Starting server: node dist/index.js
+2025-11-07T21:25:23.529857514Z 🚀 Initializing CIE Faculty Portal...
+2025-11-07T21:25:23.53331008Z 📚 Initializing departments...
+2025-11-07T21:25:23.538301724Z   ✓ Created department: Computer Engineering
+2025-11-07T21:25:23.539281333Z   ✓ Created department: Information Systems
+2025-11-07T21:25:23.540392664Z   ✓ Created department: Software Engineering
+2025-11-07T21:25:23.624837693Z   ✓ Created department: Network Engineering
+2025-11-07T21:25:23.625077537Z 💬 Initializing default chat rooms...
+2025-11-07T21:25:23.627364641Z   ✓ Created General chat room
+2025-11-07T21:25:23.627812219Z   ✓ Created Computer Engineering chat room
+2025-11-07T21:25:23.628524373Z   ✓ Created Information Systems chat room
+2025-11-07T21:25:23.629054813Z   ✓ Created Software Engineering chat room
+2025-11-07T21:25:23.629573493Z   ✓ Created Network Engineering chat room
+2025-11-07T21:25:23.629775446Z 🔄 Restoring users from backup...
+2025-11-07T21:25:23.727092899Z   ✓ Restored 8 users from backup
+2025-11-07T21:25:23.727732592Z 👥 Initializing governors and admin...
+2025-11-07T21:25:23.72976243Z 🔄 Syncing config.json users to backup...
+2025-11-07T21:25:23.737040738Z   ✓ Synced 6 config users to backup
+2025-11-07T21:25:23.737115329Z ✅ System initialization complete
+2025-11-07T21:25:23.739307441Z file:///app/dist/index.js:6
+2025-11-07T21:25:23.739322781Z   throw Error('Dynamic require of "' + x + '" is not supported');
+2025-11-07T21:25:23.739327551Z         ^
+2025-11-07T21:25:23.739331431Z 
+2025-11-07T21:25:23.739335561Z Error: Dynamic require of "memorystore" is not supported
+2025-11-07T21:25:23.739340071Z     at file:///app/dist/index.js:6:9
+2025-11-07T21:25:23.739344121Z     at registerRoutes (file:///app/dist/index.js:718:23)
+2025-11-07T21:25:23.739348301Z     at async file:///app/dist/index.js:1561:18
+2025-11-07T21:25:23.739352132Z 
+2025-11-07T21:25:23.739356312Z Node.js v20.19.5
