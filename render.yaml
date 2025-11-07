@@ -13,22 +13,9 @@ services:
         value: 5000
       - key: SESSION_SECRET
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: cie-faculty-db
-          property: connectionString
-      - key: DB_SSL
-        value: true
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_CHAT_ID
         sync: false
     autoDeploy: true
     healthCheckPath: /
-    
-databases:
-  - name: cie-faculty-db
-    databaseName: cie_faculty
-    user: cie_faculty_user
-    plan: free
-    region: oregon

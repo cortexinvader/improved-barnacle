@@ -1,26 +1,19 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pkg from "pg";
-const { Pool } = pkg;
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
 import * as schema from "@shared/schema";
+import path from "path";
+import fs from "fs";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+// Ensure data directory exists
+const dataDir = path.join(process.cwd(), "data");
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
 }
 
-// Configure pool with optional SSL controlled by DB_SSL.
-// - Set DB_SSL=true when your Postgres requires TLS (external DBs like Neon/Supabase often require this).
-// - Optionally set DB_SSL_REJECT_UNAUTHORIZED=false if you must skip cert verification (not recommended for production).
-const poolOptions: any = {
-  connectionString: process.env.DATABASE_URL,
-};
+const dbPath = path.join(dataDir, "cie_portal.db");
+const sqlite = new Database(dbPath);
 
-const shouldUseSsl = process.env.DB_SSL === "true";
+// Enable WAL mode for better concurrency
+sqlite.pragma("journal_mode = WAL");
 
-if (shouldUseSsl) {
-  poolOptions.ssl = {
-    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== "false",
-  };
-}
-
-export const pool = new Pool(poolOptions);
-export const db = drizzle(pool, { schema });
+export const db = drizzle(sqlite, { schema });

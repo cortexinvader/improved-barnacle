@@ -74,13 +74,11 @@ async function generateAdminBackup(): Promise<{ backupPath: string; backupData: 
 export async function registerRoutes(app: Express): Promise<Server> {
   await initializeSystem();
 
-  const PgSession = ConnectPgSimple(session);
+  const MemoryStore = require("memorystore")(session);
   app.use(
     session({
-      store: new PgSession({
-        pool,
-        tableName: "user_sessions",
-        createTableIfMissing: true,
+      store: new MemoryStore({
+        checkPeriod: 86400000, // prune expired entries every 24h
       }),
       secret: process.env.SESSION_SECRET || "cie-portal-secret-key-change-in-production",
       resave: false,
