@@ -174,7 +174,8 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                         createdAt={notif.createdAt}
                         targetDepartmentName={notif.targetDepartmentName}
                         reactions={notif.reactions}
-                        comments={notif.comments}
+                        comments={notif.comments || []}
+                        commentCount={(notif.comments || []).length}
                       />
                     ))}
                   </div>

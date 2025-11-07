@@ -165,6 +165,24 @@ export default function NotificationCard({
 
         {showComments && (
           <div className="space-y-3 pt-2 border-t">
+            {/* Display existing comments */}
+            {comments && comments.length > 0 && (
+              <div className="space-y-3 mb-4">
+                {comments.map((comment: any) => (
+                  <div key={comment.id} className="bg-muted/50 p-3 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-sm">{comment.author}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(comment.timestamp).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-sm">{comment.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Add new comment */}
             <div className="flex gap-2">
               <Textarea
                 placeholder="Add a comment..."
