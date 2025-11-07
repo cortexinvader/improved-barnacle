@@ -1,6 +1,6 @@
 {
   "backupCreated": true,
-  "timestamp": "2025-11-07T23:38:12.589Z",
+  "timestamp": "2025-11-07T23:41:26.418Z",
   "users": [
     {
       "username": "faculty_gov",
@@ -63,31 +63,16 @@
   ],
   "notifications": [
     {
-      "id": "0a29aed3-8257-4cd0-aa89-a833664d0685",
+      "id": "518f297d-b76d-42f3-8ac0-288eafdbc104",
       "type": "department",
-      "notificationType": "cruise",
+      "notificationType": "regular",
       "title": "Notification",
-      "content": "Hello Everyone what's up",
+      "content": "Yo",
       "postedBy": "is_governor",
       "targetDepartmentName": "Information Systems",
-      "reactions": {
-        "heart": 2
-      },
-      "comments": [
-        {
-          "id": "1762529001501",
-          "author": "is_governor",
-          "content": "Nice",
-          "timestamp": "2025-11-07T15:23:21.501Z"
-        },
-        {
-          "id": "1762529294953",
-          "author": "is_governor",
-          "content": "Great job bro",
-          "timestamp": "2025-11-07T15:28:14.953Z"
-        }
-      ],
-      "createdAt": "2025-11-07T15:22:15.850Z"
+      "reactions": {},
+      "comments": [],
+      "createdAt": "2025-11-07T23:41:26.000Z"
     }
   ]
 }
