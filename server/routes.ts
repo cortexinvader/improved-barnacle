@@ -2,8 +2,6 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import session from "express-session";
-import ConnectPgSimple from "connect-pg-simple";
-import { pool } from "./db";
 import { storage } from "./storage";
 import { registerStudent, loginUser, isAuthorized, canAccessDepartment } from "./auth";
 import { initializeSystem } from "./init";

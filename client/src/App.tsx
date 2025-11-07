@@ -231,18 +231,23 @@ function Router() {
                       variant={selectedRoom?.id === room.id ? "default" : "outline"}
                       onClick={() => setSelectedRoom(room)}
                       size="sm"
+                      data-testid={`button-room-${room.id}`}
                     >
                       {room.name}
                     </Button>
                   ))}
                 </div>
-                {selectedRoom && (
+                {selectedRoom ? (
                   <div className="h-[calc(100vh-200px)] border rounded-lg overflow-hidden">
                     <ChatInterface 
                       roomId={selectedRoom.id}
                       roomName={selectedRoom.name} 
                       currentUser={user.username} 
                     />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[calc(100vh-200px)] border rounded-lg">
+                    <p className="text-muted-foreground">Select a chat room to start messaging</p>
                   </div>
                 )}
               </div>
