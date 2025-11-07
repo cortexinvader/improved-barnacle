@@ -63,7 +63,9 @@ export default function ChatInterface({ roomName, currentUser, roomId }: ChatInt
   useEffect(() => {
     // Connect to WebSocket
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    console.log('Connecting to WebSocket:', wsUrl);
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     // Store WebSocket globally for message reactions

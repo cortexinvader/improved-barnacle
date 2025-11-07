@@ -1,0 +1,101 @@
+2025-11-07T18:23:35.036687528Z #15 [runtime  4/13] COPY --from=build /app/dist ./dist
+2025-11-07T18:23:36.073910215Z #15 DONE 1.0s
+2025-11-07T18:23:36.22709676Z 
+2025-11-07T18:23:36.227126231Z #16 [runtime  5/13] COPY --from=build /app/node_modules ./node_modules
+2025-11-07T18:23:47.511079937Z #16 DONE 11.4s
+2025-11-07T18:23:47.653199028Z 
+2025-11-07T18:23:47.653218868Z #17 [runtime  6/13] COPY --from=build /app/config.json ./config.json
+2025-11-07T18:23:49.738478829Z #17 DONE 2.1s
+2025-11-07T18:23:49.841193033Z 
+2025-11-07T18:23:49.841210963Z #18 [runtime  7/13] COPY --from=build /app/shared ./shared
+2025-11-07T18:23:49.841215934Z #18 DONE 0.0s
+2025-11-07T18:23:49.841219724Z 
+2025-11-07T18:23:49.841223734Z #19 [runtime  8/13] COPY --from=build /app/data ./data
+2025-11-07T18:23:49.841227704Z #19 DONE 0.0s
+2025-11-07T18:23:49.947454135Z 
+2025-11-07T18:23:49.947474106Z #20 [runtime  9/13] COPY --from=build /app/uploads ./uploads
+2025-11-07T18:23:49.947479476Z #20 DONE 0.0s
+2025-11-07T18:23:49.947483616Z 
+2025-11-07T18:23:49.947488016Z #21 [runtime 10/13] COPY package.json package-lock.json ./
+2025-11-07T18:23:49.947492026Z #21 DONE 0.1s
+2025-11-07T18:23:50.148984807Z 
+2025-11-07T18:23:50.149008057Z #22 [runtime 11/13] RUN mkdir -p /usr/local/bin
+2025-11-07T18:23:50.149013027Z #22 DONE 0.1s
+2025-11-07T18:23:50.149016547Z 
+2025-11-07T18:23:50.149021247Z #23 [runtime 12/13] RUN cat > /usr/local/bin/docker-entrypoint.sh <<'SH'
+2025-11-07T18:23:50.149024838Z #23 DONE 0.1s
+2025-11-07T18:23:50.25734089Z 
+2025-11-07T18:23:50.257363001Z #24 [runtime 13/13] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+2025-11-07T18:23:50.257367731Z #24 DONE 0.1s
+2025-11-07T18:23:50.409843888Z 
+2025-11-07T18:23:50.409860578Z #25 exporting to docker image format
+2025-11-07T18:23:50.409864048Z #25 exporting layers
+2025-11-07T18:24:04.935172531Z #25 exporting layers 14.7s done
+2025-11-07T18:24:05.086221021Z #25 exporting manifest sha256:b97044b2916972fbe174de6e102edd102c35cb3b0c3438b383f1b94e38349e56
+2025-11-07T18:24:05.709996718Z #25 exporting manifest sha256:b97044b2916972fbe174de6e102edd102c35cb3b0c3438b383f1b94e38349e56 0.8s done
+2025-11-07T18:24:05.860409172Z #25 exporting config sha256:20c7f6ac75fb7037fe288f5c204eba7dc5d41bbd5524feca6ca43bc4f6bb64e8
+2025-11-07T18:24:06.368905394Z #25 exporting config sha256:20c7f6ac75fb7037fe288f5c204eba7dc5d41bbd5524feca6ca43bc4f6bb64e8 0.7s done
+2025-11-07T18:24:07.085489658Z #25 DONE 16.8s
+2025-11-07T18:24:07.085510108Z 
+2025-11-07T18:24:07.085516688Z #26 exporting cache to client directory
+2025-11-07T18:24:07.085528128Z #26 preparing build cache for export
+2025-11-07T18:24:48.422412728Z #26 writing cache image manifest sha256:52fa383cbf24e1efd40a4f15640a0e14cfdf203fc609f8add0bdd85756448fa9
+2025-11-07T18:24:48.944944579Z #26 writing cache image manifest sha256:52fa383cbf24e1efd40a4f15640a0e14cfdf203fc609f8add0bdd85756448fa9 0.5s done
+2025-11-07T18:24:48.944968759Z #26 DONE 41.9s
+2025-11-07T18:25:13.317003688Z Pushing image to registry...
+2025-11-07T18:25:18.420442119Z Upload succeeded
+2025-11-07T18:26:08.359146459Z ==> Deploying...
+2025-11-07T18:26:20.923859871Z ==> Container start: 2025-11-07T18:26:20Z
+2025-11-07T18:26:20.924673789Z ==> No admin backup provided via BACKUP or BACKUP_FILE; using /app/data/admin_backup.json from image (if present)
+2025-11-07T18:26:20.924894364Z ==> DATABASE_URL detected, creating /app/drizzle.config.json...
+2025-11-07T18:26:20.9270512Z ==> Running migrations (npm run db:push)...
+2025-11-07T18:26:22.341996596Z 
+2025-11-07T18:26:22.342015156Z > rest-express@1.0.0 db:push
+2025-11-07T18:26:22.342018576Z > drizzle-kit push
+2025-11-07T18:26:22.342020736Z 
+2025-11-07T18:26:24.040936633Z No config path provided, using default 'drizzle.config.json'
+2025-11-07T18:26:24.041910683Z Reading config file '/app/drizzle.config.json'
+2025-11-07T18:26:26.541374772Z Using 'pg' driver for database querying
+2025-11-07T18:26:27.646126391Z [⣷] Pulling schema from database...
+2025-11-07T18:26:27.761937051Z [⣯] Pulling schema from database...
+2025-11-07T18:26:27.889925614Z [⣟] Pulling schema from database...
+2025-11-07T18:26:28.018885018Z [⡿] Pulling schema from database...
+2025-11-07T18:26:28.150836228Z [⢿] Pulling schema from database...
+2025-11-07T18:26:28.276352697Z [⣻] Pulling schema from database...
+2025-11-07T18:26:28.404877492Z [⣽] Pulling schema from database...
+2025-11-07T18:26:28.532375594Z [⣷] Pulling schema from database...
+2025-11-07T18:26:28.661333548Z [⣯] Pulling schema from database...
+2025-11-07T18:26:28.789789221Z [⣟] Pulling schema from database...
+2025-11-07T18:26:28.917536649Z [⡿] Pulling schema from database...
+2025-11-07T18:26:29.045781518Z [⢿] Pulling schema from database...
+2025-11-07T18:26:29.173082876Z [⣻] Pulling schema from database...
+2025-11-07T18:26:29.301392056Z [⣽] Pulling schema from database...
+2025-11-07T18:26:29.430117584Z [⣷] Pulling schema from database...
+2025-11-07T18:26:29.558493036Z [⣯] Pulling schema from database...
+2025-11-07T18:26:29.688231477Z [⣟] Pulling schema from database...
+2025-11-07T18:26:29.702787911Z [✓] Pulling schema from database...
+2025-11-07T18:26:29.741980947Z  Warning  Found data-loss statements:
+2025-11-07T18:26:29.742469558Z · You're about to delete user_sessions table with 3 items
+2025-11-07T18:26:29.742481318Z 
+2025-11-07T18:26:29.742485938Z THIS ACTION WILL CAUSE DATA LOSS AND CANNOT BE REVERTED
+2025-11-07T18:26:29.742489718Z 
+2025-11-07T18:26:29.742493948Z Do you still want to push changes?
+2025-11-07T18:26:29.745691087Z ❯ No, abort
+2025-11-07T18:26:39.844162493Z   Yes, I want to remove 1 table, ==> Migrations ran successfully.
+2025-11-07T18:26:39.844181383Z ==> Starting server: node dist/index.js
+2025-11-07T18:26:45.734987154Z 🚀 Initializing CIE Faculty Portal...
+2025-11-07T18:26:45.741165107Z 📚 Initializing departments...
+2025-11-07T18:26:46.142269217Z 💬 Initializing default chat rooms...
+2025-11-07T18:26:46.144505725Z 🔄 Restoring users from backup...
+2025-11-07T18:26:46.235502989Z   ✓ Restored 0 users from backup
+2025-11-07T18:26:46.235837697Z 👥 Initializing governors and admin...
+2025-11-07T18:26:46.249299957Z ✅ System initialization complete
+2025-11-07T18:26:46.438220015Z ✓ Scheduled backup configured (every 24 hours)
+2025-11-07T18:26:46.446329061Z 6:26:46 PM [express] serving on port 10000
+2025-11-07T18:26:50.9679231Z ==> Your service is live 🎉
+2025-11-07T18:26:51.024215036Z ==> 
+2025-11-07T18:26:51.072531453Z ==> ///////////////////////////////////////////////////////////
+2025-11-07T18:26:51.125959629Z ==> 
+2025-11-07T18:26:51.194763324Z ==> Available at your primary URL https://improved-barnacle-4ke2.onrender.com
+2025-11-07T18:26:51.291933047Z ==> 
+2025-11-07T18:26:51.438583027Z ==> ///////////////////////////////////////////////////////////

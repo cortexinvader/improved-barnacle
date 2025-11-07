@@ -207,6 +207,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development-only: Auto-login endpoint
+  app.post("/api/auth/auto-login", async (req: Request, res: Response) => {
+    try {
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ error: "Username is required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const { password: _, ...userWithoutPassword } = user;
+      req.session.user = userWithoutPassword as User;
+      req.session.userId = user.id;
+
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.post("/api/auth/logout", (req: Request, res: Response) => {
     req.session.destroy((err) => {
       if (err) {

@@ -22,6 +22,9 @@ export default function AuthPage({ onLogin, onShowTutorial }: AuthPageProps) {
   const [phone, setPhone] = useState("");
   const [regNumber, setRegNumber] = useState("");
   const [department, setDepartment] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
   const { toast } = useToast();
 
   const loginMutation = useLogin();
@@ -35,6 +38,76 @@ export default function AuthPage({ onLogin, onShowTutorial }: AuthPageProps) {
       return response.json();
     },
   });
+
+  // Auto-login on mount if config credentials are available
+  useEffect(() => {
+    const tryAutoLogin = async () => {
+      try {
+        const response = await fetch('/api/config');
+        if (!response.ok) return;
+        
+        const config = await response.json();
+        
+        // Try to auto-login with faculty governor credentials
+        if (config.facultyGovernor?.username && config.facultyGovernor?.password) {
+          try {
+            const user = await loginMutation.mutateAsync({
+              username: config.facultyGovernor.username,
+              password: config.facultyGovernor.password,
+            });
+            
+            if (onLogin) {
+              onLogin(user);
+            }
+            return;
+          } catch (err) {
+            // Continue to try other credentials
+          }
+        }
+        
+        // Try department governors
+        if (config.departmentGovernors && Array.isArray(config.departmentGovernors)) {
+          for (const gov of config.departmentGovernors) {
+            if (gov.username && gov.password) {
+              try {
+                const user = await loginMutation.mutateAsync({
+                  username: gov.username,
+                  password: gov.password,
+                });
+                
+                if (onLogin) {
+                  onLogin(user);
+                }
+                return;
+              } catch (err) {
+                // Continue to next credential
+              }
+            }
+          }
+        }
+        
+        // Try admin credentials
+        if (config.admin?.username && config.admin?.password) {
+          try {
+            const user = await loginMutation.mutateAsync({
+              username: config.admin.username,
+              password: config.admin.password,
+            });
+            
+            if (onLogin) {
+              onLogin(user);
+            }
+          } catch (err) {
+            // No auto-login available
+          }
+        }
+      } catch (error) {
+        // Silent fail - user can still login manually
+      }
+    };
+    
+    tryAutoLogin();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,9 +126,9 @@ export default function AuthPage({ onLogin, onShowTutorial }: AuthPageProps) {
         username: loginUsername,
         password: loginPassword,
       });
-      
+
       console.log('Login successful:', user);
-      
+
       if (onLogin) {
         onLogin(user);
       }
@@ -88,13 +161,13 @@ export default function AuthPage({ onLogin, onShowTutorial }: AuthPageProps) {
         regNumber,
         departmentName: department,
       });
-      
+
       console.log('Signup successful:', user);
-      
+
       if (onLogin) {
         onLogin(user);
       }
-      
+
       toast({
         title: "Success!",
         description: "Account created successfully",
@@ -107,6 +180,8 @@ export default function AuthPage({ onLogin, onShowTutorial }: AuthPageProps) {
       });
     }
   };
+
+  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -152,9 +227,9 @@ export default function AuthPage({ onLogin, onShowTutorial }: AuthPageProps) {
                   type="submit" 
                   className="w-full" 
                   data-testid="button-login"
-                  disabled={loginMutation.isPending}
+                  disabled={isLoading || loginMutation.isPending}
                 >
-                  {loginMutation.isPending ? "Logging in..." : "Login"}
+                  {isLoading || loginMutation.isPending ? "Logging in..." : "Login"}
                 </Button>
               </form>
             </TabsContent>

@@ -66,6 +66,7 @@ export async function initializeSystem() {
     await initializeDefaultRooms(config.departments);
     await restoreUsersFromBackup();
     await initializeGovernors(config);
+    await syncConfigUsersToBackup(config);
 
     console.log("✅ System initialization complete");
   } catch (error) {
@@ -203,6 +204,96 @@ async function initializeGovernors(config: Config) {
       departmentName: "All Departments", // Admin has access to all departments
     });
     console.log(`  ✓ Created Admin: ${config.admin.username}`);
+  }
+}
+
+async function syncConfigUsersToBackup(config: Config) {
+  console.log("🔄 Syncing config.json users to backup...");
+
+  try {
+    const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
+    let backup: BackupData;
+
+    try {
+      const backupData = await fs.readFile(backupPath, "utf-8");
+      backup = JSON.parse(backupData);
+    } catch {
+      backup = { backupCreated: true, users: [] };
+    }
+
+    const configUsernames = new Set<string>();
+    
+    // Add faculty governor
+    configUsernames.add(config.facultyGovernor.username);
+    const facultyGov = await storage.getUserByUsername(config.facultyGovernor.username);
+    if (facultyGov) {
+      const existingIndex = backup.users.findIndex(u => u.username === facultyGov.username);
+      const userData = {
+        username: facultyGov.username,
+        password: facultyGov.password,
+        phone: facultyGov.phone || "+20 000 000 0000",
+        role: facultyGov.role,
+        departmentName: facultyGov.departmentName
+      };
+      if (existingIndex >= 0) {
+        backup.users[existingIndex] = userData;
+      } else {
+        backup.users.push(userData);
+      }
+    }
+
+    // Add department governors
+    for (const gov of config.departmentGovernors) {
+      configUsernames.add(gov.username);
+      const departmentGov = await storage.getUserByUsername(gov.username);
+      if (departmentGov) {
+        const existingIndex = backup.users.findIndex(u => u.username === departmentGov.username);
+        const userData = {
+          username: departmentGov.username,
+          password: departmentGov.password,
+          phone: departmentGov.phone || "+20 000 000 0000",
+          role: departmentGov.role,
+          departmentName: departmentGov.departmentName
+        };
+        if (existingIndex >= 0) {
+          backup.users[existingIndex] = userData;
+        } else {
+          backup.users.push(userData);
+        }
+      }
+    }
+
+    // Add admin
+    configUsernames.add(config.admin.username);
+    const admin = await storage.getUserByUsername(config.admin.username);
+    if (admin) {
+      const existingIndex = backup.users.findIndex(u => u.username === admin.username);
+      const userData = {
+        username: admin.username,
+        password: admin.password,
+        phone: admin.phone || "+20 000 000 0000",
+        role: admin.role,
+        departmentName: admin.departmentName
+      };
+      if (existingIndex >= 0) {
+        backup.users[existingIndex] = userData;
+      } else {
+        backup.users.push(userData);
+      }
+    }
+
+    // Ensure backup timestamp is updated
+    const finalBackup = {
+      ...backup,
+      backupCreated: true,
+      timestamp: new Date().toISOString()
+    };
+
+    await fs.mkdir(path.dirname(backupPath), { recursive: true });
+    await fs.writeFile(backupPath, JSON.stringify(finalBackup, null, 2));
+    console.log(`  ✓ Synced ${configUsernames.size} config users to backup`);
+  } catch (error) {
+    console.error("  ✗ Error syncing config users to backup:", error);
   }
 }
 
