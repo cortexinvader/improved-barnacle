@@ -1,0 +1,104 @@
+2025-11-07T19:17:05.630813101Z 
+2025-11-07T19:17:05.630818961Z #16 [runtime  4/13] COPY --from=build /app/dist ./dist
+2025-11-07T19:17:05.630823441Z #16 DONE 0.1s
+2025-11-07T19:17:06.235306604Z 
+2025-11-07T19:17:06.235418338Z #17 [runtime  5/13] COPY --from=build /app/node_modules ./node_modules
+2025-11-07T19:17:11.625060648Z #17 DONE 5.4s
+2025-11-07T19:17:11.782335164Z 
+2025-11-07T19:17:11.782362385Z #18 [runtime  6/13] COPY --from=build /app/config.json ./config.json
+2025-11-07T19:17:11.907972054Z #18 DONE 0.3s
+2025-11-07T19:17:12.035553093Z 
+2025-11-07T19:17:12.035580663Z #19 [runtime  7/13] COPY --from=build /app/shared ./shared
+2025-11-07T19:17:12.035585174Z #19 DONE 0.0s
+2025-11-07T19:17:12.035588794Z 
+2025-11-07T19:17:12.035592424Z #20 [runtime  8/13] COPY --from=build /app/data ./data
+2025-11-07T19:17:12.035596064Z #20 DONE 0.0s
+2025-11-07T19:17:12.035599394Z 
+2025-11-07T19:17:12.035603094Z #21 [runtime  9/13] COPY --from=build /app/uploads ./uploads
+2025-11-07T19:17:12.035606654Z #21 DONE 0.0s
+2025-11-07T19:17:12.035609954Z 
+2025-11-07T19:17:12.035613394Z #22 [runtime 10/13] COPY package.json package-lock.json ./
+2025-11-07T19:17:12.035616895Z #22 DONE 0.0s
+2025-11-07T19:17:12.19417453Z 
+2025-11-07T19:17:12.194208391Z #23 [runtime 11/13] RUN mkdir -p /usr/local/bin
+2025-11-07T19:17:12.194215051Z #23 DONE 0.1s
+2025-11-07T19:17:12.194220382Z 
+2025-11-07T19:17:12.194228262Z #24 [runtime 12/13] RUN cat > /usr/local/bin/docker-entrypoint.sh <<'SH'
+2025-11-07T19:17:12.194232122Z #24 DONE 0.1s
+2025-11-07T19:17:12.296285671Z 
+2025-11-07T19:17:12.296311242Z #25 [runtime 13/13] RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+2025-11-07T19:17:12.296316291Z #25 DONE 0.1s
+2025-11-07T19:17:12.296329842Z 
+2025-11-07T19:17:12.296333662Z #26 exporting to docker image format
+2025-11-07T19:17:12.446734879Z #26 exporting layers
+2025-11-07T19:17:22.696212888Z #26 exporting layers 10.4s done
+2025-11-07T19:17:22.934606654Z #26 exporting manifest sha256:0f8f37f0fcb8e36e8b40636bde7a8310abf90f29b0149fcc9308761a25cf93ec 0.0s done
+2025-11-07T19:17:22.934661225Z #26 exporting config sha256:41f9d9fede01f8e3b6212112af09b498cdb646dee2aed49fdc8a205653700cda 0.0s done
+2025-11-07T19:17:23.443501306Z #26 DONE 11.1s
+2025-11-07T19:17:23.59381495Z 
+2025-11-07T19:17:23.5938358Z #27 exporting cache to client directory
+2025-11-07T19:17:23.593841281Z #27 preparing build cache for export
+2025-11-07T19:17:24.267443256Z #27 writing cache image manifest sha256:84ad42717f49d2462b1affe7b2e8a8f216b00c0d6ae5915ff8805c9fd86d1ee7 done
+2025-11-07T19:17:24.267461357Z #27 DONE 0.8s
+2025-11-07T19:17:25.168586196Z Pushing image to registry...
+2025-11-07T19:17:30.605537928Z Upload succeeded
+2025-11-07T19:17:32.603639766Z ==> Deploying...
+2025-11-07T19:17:42.528533803Z ==> Container start: 2025-11-07T19:17:42Z
+2025-11-07T19:17:42.529370844Z ==> No admin backup provided via BACKUP or BACKUP_FILE; using /app/data/admin_backup.json from image (if present)
+2025-11-07T19:17:42.529464876Z ==> DATABASE_URL detected, creating /app/drizzle.config.json...
+2025-11-07T19:17:42.53173421Z ==> Running migrations (npm run db:push)...
+2025-11-07T19:17:43.922075563Z 
+2025-11-07T19:17:43.922098964Z > rest-express@1.0.0 db:push
+2025-11-07T19:17:43.922103514Z > drizzle-kit push
+2025-11-07T19:17:43.922105764Z 
+2025-11-07T19:17:45.510379351Z No config path provided, using default 'drizzle.config.json'
+2025-11-07T19:17:45.511292492Z Reading config file '/app/drizzle.config.json'
+2025-11-07T19:17:48.119938976Z Using 'pg' driver for database querying
+2025-11-07T19:17:49.317330305Z [⣷] Pulling schema from database...
+2025-11-07T19:17:49.40791257Z [⣯] Pulling schema from database...
+2025-11-07T19:17:49.536252513Z [⣟] Pulling schema from database...
+2025-11-07T19:17:49.664973715Z [⡿] Pulling schema from database...
+2025-11-07T19:17:49.793253406Z [⢿] Pulling schema from database...
+2025-11-07T19:17:49.922173462Z [⣻] Pulling schema from database...
+2025-11-07T19:17:50.050042123Z [⣽] Pulling schema from database...
+2025-11-07T19:17:50.178410946Z [⣷] Pulling schema from database...
+2025-11-07T19:17:50.306635326Z [⣯] Pulling schema from database...
+2025-11-07T19:17:50.435343507Z [⣟] Pulling schema from database...
+2025-11-07T19:17:50.563956736Z [⡿] Pulling schema from database...
+2025-11-07T19:17:50.692271318Z [⢿] Pulling schema from database...
+2025-11-07T19:17:50.821207805Z [⣻] Pulling schema from database...
+2025-11-07T19:17:50.949844155Z [⣽] Pulling schema from database...
+2025-11-07T19:17:51.077795638Z [⣷] Pulling schema from database...
+2025-11-07T19:17:51.205978356Z [⣯] Pulling schema from database...
+2025-11-07T19:17:51.299885912Z [✓] Pulling schema from database...
+2025-11-07T19:17:51.322092315Z  Warning  Found data-loss statements:
+2025-11-07T19:17:51.322118256Z · You're about to delete user_sessions table with 3 items
+2025-11-07T19:17:51.322129936Z 
+2025-11-07T19:17:51.322231088Z THIS ACTION WILL CAUSE DATA LOSS AND CANNOT BE REVERTED
+2025-11-07T19:17:51.322238229Z 
+2025-11-07T19:17:51.322319221Z Do you still want to push changes?
+2025-11-07T19:17:51.407952678Z ❯ No, abort
+2025-11-07T19:18:01.423234317Z   Yes, I want to remove 1 table, ==> Migrations ran successfully.
+2025-11-07T19:18:01.423257807Z ==> Starting server: node dist/index.js
+2025-11-07T19:18:07.516366145Z 🚀 Initializing CIE Faculty Portal...
+2025-11-07T19:18:07.608635621Z 📚 Initializing departments...
+2025-11-07T19:18:08.014305535Z 💬 Initializing default chat rooms...
+2025-11-07T19:18:08.01659331Z 🔄 Restoring users from backup...
+2025-11-07T19:18:08.114095912Z   ✓ Restored 0 users from backup
+2025-11-07T19:18:08.11443924Z 👥 Initializing governors and admin...
+2025-11-07T19:18:08.120426374Z 🔄 Syncing config.json users to backup...
+2025-11-07T19:18:08.220252322Z   ✓ Synced 6 config users to backup
+2025-11-07T19:18:08.220276632Z ✅ System initialization complete
+2025-11-07T19:18:08.513879884Z ✓ Scheduled backup configured (every 24 hours)
+2025-11-07T19:18:08.613122178Z 7:18:08 PM [express] serving on port 10000
+2025-11-07T19:18:13.555770168Z ==> Your service is live 🎉
+2025-11-07T19:18:13.593961265Z ==> 
+2025-11-07T19:18:13.630561882Z ==> ///////////////////////////////////////////////////////////
+2025-11-07T19:18:13.66920368Z ==> 
+2025-11-07T19:18:13.707529137Z ==> Available at your primary URL https://improved-barnacle-4ke2.onrender.com
+2025-11-07T19:18:13.744904004Z ==> 
+2025-11-07T19:18:13.780051462Z ==> ///////////////////////////////////////////////////////////
+2025-11-07T19:18:42.737894571Z 7:18:42 PM [express] GET /api/auth/me 401 in 3ms :: {"error":"Not authenticated"}
+2025-11-07T19:18:43.319463651Z 7:18:43 PM [express] GET /api/departments 304 in 12ms :: [{"id":"9fe0300b-8304-41a2-a391-3d24012e316…
+2025-11-07T19:19:02.212880837Z 7:19:02 PM [express] POST /api/auth/login 401 in 768ms :: {"error":"Invalid username or password"}
+2025-11-07T19:19:17.507438968Z 7:19:17 PM [express] POST /api/auth/login 401 in 454ms :: {"error":"Invalid username or password"}
