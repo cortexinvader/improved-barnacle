@@ -1,4 +1,6 @@
+
 import fs from "fs/promises";
+import FormData from "form-data";
 
 interface TelegramConfig {
   botToken?: string;
@@ -16,19 +18,20 @@ export async function sendBackupToTelegram(backupFilePath: string): Promise<void
       return;
     }
 
-    const fileContent = await fs.readFile(backupFilePath);
     const formData = new FormData();
-    
-    const blob = new Blob([fileContent], { type: "application/json" });
     formData.append("chat_id", chatId);
-    formData.append("document", blob, "admin_backup.json");
+    formData.append("document", await fs.readFile(backupFilePath), {
+      filename: "admin_backup.json",
+      contentType: "application/json",
+    });
     formData.append("caption", `System Backup - ${new Date().toLocaleString()}`);
 
     const response = await fetch(
       `https://api.telegram.org/bot${botToken}/sendDocument`,
       {
         method: "POST",
-        body: formData,
+        body: formData as any,
+        headers: formData.getHeaders(),
       }
     );
 
