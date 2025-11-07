@@ -29,59 +29,59 @@ export const rooms = sqliteTable("rooms", {
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const messages = pgTable("messages", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const messages = sqliteTable("messages", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   roomId: text("room_id").notNull(),
   sender: text("sender").notNull(),
   content: text("content").notNull(),
-  formatting: jsonb("formatting"),
+  formatting: text("formatting", { mode: "json" }),
   imageUrl: text("image_url"),
-  imageExpiry: timestamp("image_expiry"),
+  imageExpiry: integer("image_expiry", { mode: "timestamp" }),
   replyTo: text("reply_to"),
-  edited: boolean("edited").default(false).notNull(),
-  reactions: jsonb("reactions").default(sql`'{}'::jsonb`).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  edited: integer("edited", { mode: "boolean" }).$defaultFn(() => false).notNull(),
+  reactions: text("reactions", { mode: "json" }).$defaultFn(() => ({})).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const notifications = pgTable("notifications", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const notifications = sqliteTable("notifications", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   type: text("type").notNull(),
   notificationType: text("notification_type").notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
   postedBy: text("posted_by").notNull(),
   targetDepartmentName: text("target_department_name"),
-  reactions: jsonb("reactions").default(sql`'{}'::jsonb`).notNull(),
-  comments: jsonb("comments").default(sql`'[]'::jsonb`).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  reactions: text("reactions", { mode: "json" }).$defaultFn(() => ({})).notNull(),
+  comments: text("comments", { mode: "json" }).$defaultFn(() => ([])).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const documents = pgTable("documents", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const documents = sqliteTable("documents", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   path: text("path").notNull(),
   owner: text("owner").notNull(),
   departmentName: text("department_name").notNull(),
   fileType: text("file_type").notNull(),
   size: integer("size").notNull(),
-  expiration: timestamp("expiration"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiration: integer("expiration", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const activityLogs = pgTable("activity_logs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const activityLogs = sqliteTable("activity_logs", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull(),
   action: text("action").notNull(),
-  details: jsonb("details"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  details: text("details", { mode: "json" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()).notNull(),
 });
 
-export const pushSubscriptions = pgTable("push_subscriptions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+export const pushSubscriptions = sqliteTable("push_subscriptions", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id").notNull(),
   endpoint: text("endpoint").notNull().unique(),
-  keys: jsonb("keys").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  keys: text("keys", { mode: "json" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()).notNull(),
 });
 
 export const insertUserSchema = createInsertSchema(users).omit({
