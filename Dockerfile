@@ -36,7 +36,6 @@ COPY --from=build /app/shared ./shared
 COPY --from=build /app/data ./data
 COPY --from=build /app/uploads ./uploads
 COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=build /app/migrations ./migrations
 
 COPY package.json package-lock.json ./
 
