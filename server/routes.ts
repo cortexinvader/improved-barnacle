@@ -14,6 +14,7 @@ import cron from "node-cron";
 import type { User } from "@shared/schema";
 import { registerAIRoutes } from "./ai";
 import { sendBackupToTelegram } from "./telegram";
+import createMemoryStore from "memorystore";
 
 declare module "express-session" {
   interface SessionData {
@@ -74,7 +75,7 @@ async function generateAdminBackup(): Promise<{ backupPath: string; backupData: 
 export async function registerRoutes(app: Express): Promise<Server> {
   await initializeSystem();
 
-  const MemoryStore = require("memorystore")(session);
+  const MemoryStore = createMemoryStore(session);
   app.use(
     session({
       store: new MemoryStore({
