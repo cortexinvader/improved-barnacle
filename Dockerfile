@@ -14,9 +14,6 @@ RUN npm ci
 # Copy source
 COPY . .
 
-# Patch server/vite.ts so production uses ../dist/public
-RUN sed -i 's|path.resolve(import.meta.dirname, \"public\")|path.resolve(import.meta.dirname, \"..\", \"dist\", \"public\")|g' server/vite.ts || true
-
 # Build client and bundle server
 RUN npm run build
 
@@ -38,6 +35,8 @@ COPY --from=build /app/config.json ./config.json
 COPY --from=build /app/shared ./shared
 COPY --from=build /app/data ./data
 COPY --from=build /app/uploads ./uploads
+COPY --from=build /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=build /app/migrations ./migrations
 
 COPY package.json package-lock.json ./
 
@@ -68,25 +67,15 @@ if [ ! -f /app/config.json ]; then
   echo "WARNING: config.json not found at /app/config.json. The app expects this file."
 fi
 
-# 2) If DATABASE_URL provided, create drizzle.config.json and run migrations
+# 2) If DATABASE_URL provided, run migrations using the existing drizzle.config.ts
 if [ -n "${DATABASE_URL}" ]; then
-  echo "==> DATABASE_URL detected, creating /app/drizzle.config.json..."
-  cat > /app/drizzle.config.json <<JSON
-{
-  "out": "./migrations",
-  "schema": "./shared/schema.ts",
-  "dialect": "postgresql",
-  "dbCredentials": {
-    "url": "${DATABASE_URL}"
-  }
-}
-JSON
-
-  echo "==> Running migrations (npm run db:push)..."
-  if npm run db:push; then
-    echo "==> Migrations ran successfully."
+  echo "==> DATABASE_URL detected. Running migrations..."
+  # drizzle-kit is in devDependencies from build stage, so it's available in node_modules
+  if npm run db:push 2>&1 | tee /tmp/migration.log; then
+    echo "==> Migrations completed successfully."
   else
-    echo "==> Migrations failed or drizzle-kit is not configured; continuing to start server."
+    echo "==> Warning: Migrations encountered issues. Check logs above."
+    echo "==> Continuing to start server (tables may need manual setup)."
   fi
 else
   echo "==> No DATABASE_URL found; skipping migrations."

@@ -141,16 +141,22 @@ async function restoreUsersFromBackup() {
     for (const userData of backup.users) {
       const existing = await storage.getUserByUsername(userData.username);
       if (!existing) {
+        // Skip users without required fields (password)
+        if (!userData.password) {
+          console.log(`  ⚠ Skipping user ${userData.username} - no password in backup`);
+          continue;
+        }
+
         // If the backup already contains a bcrypt hash (starts with $2...), store it as-is.
         // If the backup password is plaintext, hash it now.
-        const passwordToStore: string | undefined = userData.password
-          ? (isBcryptHash(userData.password) ? userData.password : await hashPassword(userData.password))
-          : undefined;
+        const passwordToStore: string = isBcryptHash(userData.password) 
+          ? userData.password 
+          : await hashPassword(userData.password);
 
         await storage.createUser({
           username: userData.username,
           password: passwordToStore,
-          phone: userData.phone || null,
+          phone: userData.phone || "+20 000 000 0000",
           regNumber: userData.regNumber || null,
           role: userData.role as any,
           departmentName: userData.departmentName || "Unknown"
