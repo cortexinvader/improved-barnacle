@@ -566,12 +566,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { backupPath, backupData } = await generateAdminBackup();
 
+      // Ensure notifications are in the backup
+      const notificationCount = backupData.notifications?.length || 0;
+
       await storage.createActivityLog({
         userId: req.session.user.id,
         action: "CREDENTIALS_BACKUP",
         details: { 
           userCount: backupData.users.length, 
-          notificationCount: backupData.notifications.length 
+          notificationCount 
         },
       });
 
