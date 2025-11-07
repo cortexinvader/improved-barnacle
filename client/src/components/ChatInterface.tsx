@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Image as ImageIcon, Bold, Italic, Palette } from "lucide-react";
 import ChatMessage from "./ChatMessage";
+import UserProfileDialog from "./UserProfileDialog";
 
 interface Message {
   id: string;
@@ -37,6 +38,8 @@ export default function ChatInterface({ roomName, currentUser, roomId }: ChatInt
   const [textColor, setTextColor] = useState("#000000");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [selectedUsername, setSelectedUsername] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -242,16 +245,15 @@ export default function ChatInterface({ roomName, currentUser, roomId }: ChatInt
   };
 
   // Handler for message reactions
-  const handleReaction = (messageId: string, emoji: string) => {
-    const ws = (window as any).ws;
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        type: "react",
-        messageId,
-        reaction: emoji,
-        emoji: emoji,
-      }));
-    }
+  const handleReaction = (emoji: string) => {
+    // This handler is passed to ChatMessage but not currently used
+    // since ChatMessage handles reactions internally via WebSocket
+  };
+
+  // Handler for username click
+  const handleUsernameClick = (username: string) => {
+    setSelectedUsername(username);
+    setProfileDialogOpen(true);
   };
 
   return (
@@ -279,7 +281,8 @@ export default function ChatInterface({ roomName, currentUser, roomId }: ChatInt
               formatting={msg.formatting}
               imageUrl={msg.imageUrl}
               caption={msg.caption}
-              onReact={handleReaction} // Pass down the reaction handler
+              onReact={handleReaction}
+              onUsernameClick={handleUsernameClick}
             />
           ))}
         </div>
@@ -397,6 +400,12 @@ export default function ChatInterface({ roomName, currentUser, roomId }: ChatInt
           Tip: Use @ai to ask questions, @username to mention someone
         </p>
       </div>
+
+      <UserProfileDialog
+        username={selectedUsername}
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
+      />
     </div>
   );
 }

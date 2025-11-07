@@ -21,7 +21,8 @@ interface ChatMessageProps {
   };
   imageUrl?: string;
   caption?: string;
-  onReact?: (emoji: string) => void; // Added onReact prop
+  onReact?: (emoji: string) => void;
+  onUsernameClick?: (username: string) => void;
 }
 
 export default function ChatMessage({
@@ -37,7 +38,8 @@ export default function ChatMessage({
   formatting,
   imageUrl,
   caption,
-  onReact // Destructure onReact prop
+  onReact,
+  onUsernameClick
 }: ChatMessageProps) {
   const [showActions, setShowActions] = useState(false);
   const [localReactions, setLocalReactions] = useState(reactions);
@@ -87,7 +89,12 @@ export default function ChatMessage({
 
       <div className={`flex flex-col gap-1 max-w-[70%] ${isOwn ? 'items-end' : 'items-start'}`}>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium">{sender}</span>
+          <span
+            className={`text-xs font-medium ${!isAI && onUsernameClick ? 'cursor-pointer hover:underline' : ''}`}
+            onClick={() => !isAI && onUsernameClick && onUsernameClick(sender)}
+          >
+            {sender}
+          </span>
           {isAI && <Badge variant="secondary" className="text-[10px] h-4 px-1">AI</Badge>}
         </div>
 

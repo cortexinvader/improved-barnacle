@@ -13,6 +13,7 @@ import fs from "fs/promises";
 import cron from "node-cron";
 import type { User } from "@shared/schema";
 import { registerAIRoutes } from "./ai";
+import { sendBackupToTelegram } from "./telegram";
 
 declare module "express-session" {
   interface SessionData {
@@ -29,6 +30,45 @@ const upload = multer({
 interface WebSocketClient extends WebSocket {
   userId?: string;
   roomId?: string;
+}
+
+// Store all connected WebSocket clients for broadcasting
+const allClients = new Set<WebSocketClient>();
+
+// Shared helper function to generate admin backup
+async function generateAdminBackup(): Promise<{ backupPath: string; backupData: any }> {
+  const users = await storage.getAllUsers();
+  const notifications = await storage.getAllNotifications();
+  
+  const backupData = {
+    backupCreated: true,
+    timestamp: new Date().toISOString(),
+    users: users.map(u => ({
+      username: u.username,
+      password: u.password,
+      phone: u.phone,
+      regNumber: u.regNumber || undefined,
+      role: u.role,
+      departmentName: u.departmentName,
+    })),
+    notifications: notifications.map(n => ({
+      id: n.id,
+      type: n.type,
+      notificationType: n.notificationType,
+      title: n.title,
+      content: n.content,
+      postedBy: n.postedBy,
+      targetDepartmentName: n.targetDepartmentName,
+      reactions: n.reactions,
+      comments: n.comments,
+      createdAt: n.createdAt,
+    })),
+  };
+
+  const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
+  await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
+
+  return { backupPath, backupData };
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -52,6 +92,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       },
     })
   );
+
+  // Scheduled backup system - reads interval from config
+  try {
+    const configPath = path.join(process.cwd(), "config.json");
+    const configData = await fs.readFile(configPath, "utf-8");
+    const config = JSON.parse(configData);
+    const backupIntervalHours = config.system?.backupIntervalHours || 24;
+
+    // Create cron expression based on interval
+    let cronExpression: string;
+    if (backupIntervalHours < 24) {
+      // For intervals less than 24 hours, run every N hours
+      cronExpression = `0 */${backupIntervalHours} * * *`;
+    } else {
+      // For 24 hours or more, run once per day at midnight
+      cronExpression = "0 0 * * *";
+    }
+
+    cron.schedule(cronExpression, async () => {
+      try {
+        console.log("🔄 Running scheduled backup...");
+        const { backupPath } = await generateAdminBackup();
+        await sendBackupToTelegram(backupPath);
+        console.log("✓ Scheduled backup completed");
+      } catch (error) {
+        console.error("✗ Scheduled backup failed:", error);
+      }
+    });
+
+    console.log(`✓ Scheduled backup configured (every ${backupIntervalHours} hours)`);
+  } catch (error) {
+    console.error("✗ Failed to configure scheduled backup:", error);
+  }
 
   cron.schedule("0 * * * *", async () => {
     try {
@@ -200,6 +273,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: { roomId: room.id, roomName: name },
       });
 
+      // Broadcast new room to all connected clients
+      allClients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: "new_room",
+            room: room,
+          }));
+        }
+      });
+
       res.json(room);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -236,23 +319,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Not authenticated" });
       }
 
-      let notifications;
-      // Fetch all notifications first
-      const allNotifications = await storage.getAllNotifications();
-      
-      // Filter based on user role
-      if (req.session.user.role === "admin" || req.session.user.role === "faculty-governor") {
-        // Admin and faculty governors see everything
-        notifications = allNotifications;
-      } else {
-        // Students and department governors see:
-        // 1. General notifications (type === "general")
-        // 2. Their department-specific notifications
-        notifications = allNotifications.filter(notif => 
-          notif.type === "general" || 
-          notif.targetDepartmentName === req.session.user.departmentName
-        );
-      }
+      // Everyone can see all notifications
+      const notifications = await storage.getAllNotifications();
 
       res.json(notifications);
     } catch (error: any) {
@@ -381,6 +449,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/notifications/:id", async (req: Request, res: Response) => {
+    try {
+      if (!req.session.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // Allow deletion by admins, faculty governors, and department governors
+      const allowedRoles = ["admin", "faculty-governor", "department-governor"];
+      if (!allowedRoles.includes(req.session.user.role)) {
+        return res.status(403).json({ error: "Not authorized to delete notifications" });
+      }
+
+      const notification = await storage.getNotification(req.params.id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+
+      // Department governors can only delete notifications they posted or for their department
+      if (req.session.user.role === "department-governor") {
+        const canDelete = 
+          notification.postedBy === req.session.user.username ||
+          notification.targetDepartmentName === req.session.user.departmentName;
+        
+        if (!canDelete) {
+          return res.status(403).json({ error: "You can only delete your own notifications or notifications for your department" });
+        }
+      }
+
+      await storage.deleteNotification(req.params.id);
+
+      await storage.createActivityLog({
+        userId: req.session.user.id,
+        action: "NOTIFICATION_DELETED",
+        details: { notificationId: req.params.id, title: notification.title },
+      });
+
+      res.json({ message: "Notification deleted successfully" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Original document upload endpoint - to be replaced by the new one below
   // app.post("/api/documents", upload.single("file"), async (req: any, res: Response) => {
   //   try {
@@ -454,27 +564,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ error: "Admin only" });
       }
 
-      const users = await storage.getAllUsers();
-      const backupData = {
-        backupCreated: true,
-        users: users.map(u => ({
-          username: u.username,
-          password: u.password,
-          phone: u.phone,
-          regNumber: u.regNumber || undefined,
-          role: u.role,
-          departmentName: u.departmentName,
-        })),
-      };
-
-      const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
-      await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
+      const { backupPath, backupData } = await generateAdminBackup();
 
       await storage.createActivityLog({
         userId: req.session.user.id,
         action: "CREDENTIALS_BACKUP",
-        details: { userCount: users.length },
+        details: { 
+          userCount: backupData.users.length, 
+          notificationCount: backupData.notifications.length 
+        },
       });
+
+      // Send backup via Telegram if configured
+      await sendBackupToTelegram(backupPath);
 
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Content-Disposition', 'attachment; filename=admin_backup.json');
@@ -679,6 +781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   wss.on("connection", (ws: WebSocketClient) => {
     console.log("WebSocket client connected");
+    allClients.add(ws);
 
     ws.on("message", async (data: string) => {
       try {
@@ -790,6 +893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (ws.roomId && rooms.has(ws.roomId)) {
         rooms.get(ws.roomId)!.delete(ws);
       }
+      allClients.delete(ws);
       console.log("WebSocket client disconnected");
     });
   });

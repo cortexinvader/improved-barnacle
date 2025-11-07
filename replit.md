@@ -135,3 +135,29 @@ Preferred communication style: Simple, everyday language.
 - Error responses with structured JSON format
 - Request logging middleware with duration tracking
 - Raw body preservation for webhook verification
+
+## Render Deployment Configuration
+
+The application is fully compatible with Render.com deployment:
+
+**Environment Variables Required**
+- `DATABASE_URL`: PostgreSQL connection string (provided by Render's PostgreSQL add-on)
+- `PORT`: Server port (automatically set by Render, defaults to 5000)
+- `NODE_ENV`: Set to "production" for production deployment
+- `SESSION_SECRET`: Secure session secret key
+- `DB_SSL`: Set to "true" if using Render's PostgreSQL (requires SSL)
+
+**Deployment Steps**
+1. Create a new Web Service on Render
+2. Connect your GitHub repository
+3. Add Render PostgreSQL add-on (provides internal DATABASE_URL)
+4. Set environment variables in Render dashboard
+5. Build command: `npm run build`
+6. Start command: `npm start`
+
+**Key Features**
+- Server listens on `0.0.0.0:PORT` (Render-compatible)
+- Automatic database schema push on deployment
+- Cron jobs for image cleanup (runs hourly)
+- WebSocket support for real-time features
+- Production-ready build pipeline with Vite + ESBuild

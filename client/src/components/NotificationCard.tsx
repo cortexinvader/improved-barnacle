@@ -23,6 +23,7 @@ interface NotificationCardProps {
 }
 
 export default function NotificationCard({
+  id,
   type,
   notificationType,
   title,

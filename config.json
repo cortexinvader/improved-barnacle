@@ -52,6 +52,7 @@
   "system": {
     "imageExpiryHours": 3,
     "maxUploadSizeMB": 10,
-    "sessionTimeoutMinutes": 480
+    "sessionTimeoutMinutes": 480,
+    "backupIntervalHours": 24
   }
 }

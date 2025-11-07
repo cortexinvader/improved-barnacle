@@ -32,6 +32,22 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
   useEffect(() => {
     loadRooms();
     loadNotifications();
+
+    // Connect to WebSocket for real-time updates
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'new_room') {
+        // Add the new room to the rooms list
+        setRooms(prev => [...prev, data.room]);
+      }
+    };
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
   const loadRooms = async () => {
@@ -147,7 +163,19 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                 <ScrollArea className="h-96">
                   <div className="space-y-4">
                     {notifications.slice(0, 5).map((notif) => (
-                      <NotificationCard key={notif.id} notification={notif} />
+                      <NotificationCard
+                        key={notif.id}
+                        id={notif.id}
+                        type={notif.notificationType}
+                        notificationType={notif.notificationType}
+                        title={notif.title}
+                        content={notif.content}
+                        postedBy={notif.postedBy}
+                        createdAt={notif.createdAt}
+                        targetDepartmentName={notif.targetDepartmentName}
+                        reactions={notif.reactions}
+                        comments={notif.comments}
+                      />
                     ))}
                   </div>
                 </ScrollArea>
@@ -195,11 +223,20 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         )}
 
         {activeView === 'profile' && (
-          <UserProfile user={user} />
+          <UserProfile
+            username={user.username}
+            phone={user.phone}
+            regNumber={user.regNumber}
+            role={user.role}
+            department={user.departmentName}
+          />
         )}
 
         {activeView === 'posting' && (
-          <GovernorPostingPanel user={user} />
+          <GovernorPostingPanel
+            role={user.role === 'faculty-governor' ? 'faculty' : 'department'}
+            department={user.departmentName}
+          />
         )}
 
         {activeView === 'admin' && user.role === 'admin' && (
