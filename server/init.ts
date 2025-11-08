@@ -195,12 +195,15 @@ async function restoreNotificationsFromBackup() {
     const backupData = await fs.readFile(backupPath, "utf-8");
     const backup: BackupData = JSON.parse(backupData);
 
+    console.log(`  📋 Found backup with ${backup.notifications?.length || 0} notifications`);
+
     if (!backup.backupCreated || !Array.isArray(backup.notifications) || backup.notifications.length === 0) {
       console.log("  ℹ No notifications to restore");
       return;
     }
 
     let restoredCount = 0;
+    let skippedCount = 0;
     for (const notifData of backup.notifications) {
       try {
         // Check if notification already exists by ID
@@ -221,13 +224,16 @@ async function restoreNotificationsFromBackup() {
           });
           restoredCount++;
           console.log(`  ✓ Restored notification: ${notifData.title}`);
+        } else {
+          skippedCount++;
+          console.log(`  ⊘ Skipped existing notification: ${notifData.title}`);
         }
       } catch (error) {
         console.error(`  ✗ Failed to restore notification ${notifData.id}:`, error);
       }
     }
 
-    console.log(`  ✓ Restored ${restoredCount} notifications from backup`);
+    console.log(`  ✓ Restored ${restoredCount} notifications from backup (${skippedCount} already existed)`);
   } catch (error) {
     console.error("  ✗ Error restoring notifications:", error);
     console.log("  ℹ Continuing without restoring notifications.");
