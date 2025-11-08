@@ -69,10 +69,29 @@ async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
 
+// Run database migrations automatically
+function runMigrations() {
+  try {
+    console.log("🔄 Running database migrations...");
+    // NOTE: This assumes you have a script in your package.json like:
+    // "db:push": "drizzle-kit push:pg" or similar for your database.
+    // If your command is different, please update it here.
+    const { execSync } = require("child_process");
+    execSync("npm run db:push", { stdio: "inherit" });
+    console.log("✅ Database migrations completed");
+  } catch (error) {
+    console.error("❌ Migration failed:", error);
+    throw error; // Re-throw to stop initialization if migrations fail
+  }
+}
+
 export async function initializeSystem() {
   console.log("🚀 Initializing CIE Faculty Portal...");
 
   try {
+    // Run migrations first to ensure all tables exist
+    runMigrations();
+
     const configPath = path.join(process.cwd(), "config.json");
     const configData = await fs.readFile(configPath, "utf-8");
     const config: Config = JSON.parse(configData);
@@ -139,7 +158,7 @@ async function restoreUsersFromBackup() {
 
   try {
     let backupData: string;
-    
+
     // Priority 1: Check for ADMIN_BACKUP env variable (for Render)
     if (process.env.ADMIN_BACKUP) {
       console.log("  ℹ Using backup from ADMIN_BACKUP environment variable");
@@ -149,7 +168,7 @@ async function restoreUsersFromBackup() {
       const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
       backupData = await fs.readFile(backupPath, "utf-8");
     }
-    
+
     const backup: BackupData = JSON.parse(backupData);
 
     if (!backup.backupCreated || !Array.isArray(backup.users) || backup.users.length === 0) {
@@ -175,8 +194,8 @@ async function restoreUsersFromBackup() {
 
         // If the backup already contains a bcrypt hash (starts with $2...), store it as-is.
         // If the backup password is plaintext, hash it now.
-        const passwordToStore: string = isBcryptHash(userData.password) 
-          ? userData.password 
+        const passwordToStore: string = isBcryptHash(userData.password)
+          ? userData.password
           : await hashPassword(userData.password);
 
         await storage.createUser({
@@ -202,7 +221,7 @@ async function restoreNotificationsFromBackup() {
 
   try {
     let backupData: string;
-    
+
     // Priority 1: Check for ADMIN_BACKUP env variable (for Render)
     if (process.env.ADMIN_BACKUP) {
       backupData = process.env.ADMIN_BACKUP;
@@ -211,7 +230,7 @@ async function restoreNotificationsFromBackup() {
       const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
       backupData = await fs.readFile(backupPath, "utf-8");
     }
-    
+
     const backup: BackupData = JSON.parse(backupData);
 
     console.log(`  📋 Found backup with ${backup.notifications?.length || 0} notifications`);
@@ -316,7 +335,7 @@ async function syncConfigUsersToBackup(config: Config) {
     }
 
     const configUsernames = new Set<string>();
-    
+
     // Add faculty governor
     configUsernames.add(config.facultyGovernor.username);
     const facultyGov = await storage.getUserByUsername(config.facultyGovernor.username);
