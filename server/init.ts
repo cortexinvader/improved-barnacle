@@ -138,8 +138,18 @@ async function restoreUsersFromBackup() {
   console.log("🔄 Restoring users from backup...");
 
   try {
-    const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
-    const backupData = await fs.readFile(backupPath, "utf-8");
+    let backupData: string;
+    
+    // Priority 1: Check for ADMIN_BACKUP env variable (for Render)
+    if (process.env.ADMIN_BACKUP) {
+      console.log("  ℹ Using backup from ADMIN_BACKUP environment variable");
+      backupData = process.env.ADMIN_BACKUP;
+    } else {
+      // Priority 2: Use backup file from filesystem
+      const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
+      backupData = await fs.readFile(backupPath, "utf-8");
+    }
+    
     const backup: BackupData = JSON.parse(backupData);
 
     if (!backup.backupCreated || !Array.isArray(backup.users) || backup.users.length === 0) {
@@ -191,8 +201,17 @@ async function restoreNotificationsFromBackup() {
   console.log("🔄 Restoring notifications from backup...");
 
   try {
-    const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
-    const backupData = await fs.readFile(backupPath, "utf-8");
+    let backupData: string;
+    
+    // Priority 1: Check for ADMIN_BACKUP env variable (for Render)
+    if (process.env.ADMIN_BACKUP) {
+      backupData = process.env.ADMIN_BACKUP;
+    } else {
+      // Priority 2: Use backup file from filesystem
+      const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
+      backupData = await fs.readFile(backupPath, "utf-8");
+    }
+    
     const backup: BackupData = JSON.parse(backupData);
 
     console.log(`  📋 Found backup with ${backup.notifications?.length || 0} notifications`);
