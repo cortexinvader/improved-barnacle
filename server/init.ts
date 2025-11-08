@@ -202,29 +202,35 @@ async function restoreNotificationsFromBackup() {
 
     let restoredCount = 0;
     for (const notifData of backup.notifications) {
-      // Check if notification already exists by ID
-      const existing = await storage.getNotification(notifData.id);
-      if (!existing) {
-        // Insert directly into database with the backup ID preserved
-        await db.insert(schema.notifications).values({
-          id: notifData.id,
-          type: notifData.type,
-          notificationType: notifData.notificationType,
-          title: notifData.title,
-          content: notifData.content,
-          postedBy: notifData.postedBy,
-          targetDepartmentName: notifData.targetDepartmentName || null,
-          reactions: notifData.reactions || {},
-          comments: notifData.comments || [],
-          createdAt: new Date(notifData.createdAt),
-        });
-        restoredCount++;
+      try {
+        // Check if notification already exists by ID
+        const existing = await storage.getNotification(notifData.id);
+        if (!existing) {
+          // Insert directly into database with the backup ID preserved
+          await db.insert(schema.notifications).values({
+            id: notifData.id,
+            type: notifData.type,
+            notificationType: notifData.notificationType,
+            title: notifData.title,
+            content: notifData.content,
+            postedBy: notifData.postedBy,
+            targetDepartmentName: notifData.targetDepartmentName || null,
+            reactions: notifData.reactions || {},
+            comments: notifData.comments || [],
+            createdAt: new Date(notifData.createdAt),
+          });
+          restoredCount++;
+          console.log(`  ✓ Restored notification: ${notifData.title}`);
+        }
+      } catch (error) {
+        console.error(`  ✗ Failed to restore notification ${notifData.id}:`, error);
       }
     }
 
     console.log(`  ✓ Restored ${restoredCount} notifications from backup`);
   } catch (error) {
-    console.log("  ℹ No backup file found or error reading backup, continuing without restoring notifications.");
+    console.error("  ✗ Error restoring notifications:", error);
+    console.log("  ℹ Continuing without restoring notifications.");
   }
 }
 
