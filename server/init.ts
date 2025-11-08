@@ -70,18 +70,15 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 // Run database migrations automatically
-function runMigrations() {
+async function runMigrations() {
   try {
     console.log("🔄 Running database migrations...");
-    // NOTE: This assumes you have a script in your package.json like:
-    // "db:push": "drizzle-kit push:pg" or similar for your database.
-    // If your command is different, please update it here.
-    const { execSync } = require("child_process");
+    const { execSync } = await import("child_process");
     execSync("npm run db:push", { stdio: "inherit" });
     console.log("✅ Database migrations completed");
   } catch (error) {
     console.error("❌ Migration failed:", error);
-    throw error; // Re-throw to stop initialization if migrations fail
+    throw error;
   }
 }
 
@@ -90,7 +87,7 @@ export async function initializeSystem() {
 
   try {
     // Run migrations first to ensure all tables exist
-    runMigrations();
+    await runMigrations();
 
     const configPath = path.join(process.cwd(), "config.json");
     const configData = await fs.readFile(configPath, "utf-8");
