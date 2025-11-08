@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Download, Upload, Plus, Trash2, Users, MessageSquare, UserX } from "lucide-react";
+import { Download, Upload, Plus, Trash2, Users, MessageSquare, UserX, Send } from "lucide-react";
 
 interface Room {
   id: string;
@@ -140,6 +140,28 @@ export default function AdminPanel() {
     console.log('Restoring credentials from backup...');
   };
 
+  const handleTelegramBackup = async () => {
+    try {
+      const response = await fetch('/api/admin/telegram-backup', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setBackupStatus(data.message || 'Backup sent to Telegram successfully');
+        setTimeout(() => setBackupStatus(''), 3000);
+      } else {
+        throw new Error(data.error || 'Failed to send backup to Telegram');
+      }
+    } catch (error: any) {
+      console.error('Telegram backup error:', error);
+      setBackupStatus('Telegram backup failed: ' + error.message);
+      setTimeout(() => setBackupStatus(''), 3000);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
@@ -219,6 +241,35 @@ export default function AdminPanel() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Send className="w-5 h-5" />
+            Telegram Backup
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Initiate an immediate backup of all credentials and send it to the configured Telegram chat.
+            </p>
+            <Button
+              onClick={handleTelegramBackup}
+              className="w-full"
+              data-testid="button-telegram-backup"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Send Backup to Telegram
+            </Button>
+            {backupStatus && (
+              <p className={`text-sm ${backupStatus.includes('failed') ? 'text-red-500' : 'text-green-500'}`}>
+                {backupStatus}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

@@ -271,9 +271,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let rooms;
       if (req.session.user.role === "admin" || req.session.user.role === "faculty-governor") {
+        // Admin and faculty governors see all rooms
         rooms = await storage.getAllRooms();
       } else {
-        rooms = await storage.getRoomsByDepartment(req.session.user.departmentName);
+        // Students and department governors see general rooms + their department rooms
+        const allRooms = await storage.getAllRooms();
+        rooms = allRooms.filter(room => 
+          room.type === "general" || 
+          room.departmentName === req.session.user.departmentName ||
+          room.departmentName === null
+        );
       }
 
       res.json(rooms);
@@ -623,12 +630,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      // Send backup via Telegram if configured
-      await sendBackupToTelegram(backupPath);
-
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Content-Disposition', 'attachment; filename=admin_backup.json');
       res.json(backupData);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/admin/telegram-backup", async (req: Request, res: Response) => {
+    try {
+      if (!req.session.user || req.session.user.role !== "admin") {
+        return res.status(403).json({ error: "Admin only" });
+      }
+
+      const { backupPath, backupData } = await generateAdminBackup();
+
+      await storage.createActivityLog({
+        userId: req.session.user.id,
+        action: "TELEGRAM_BACKUP_MANUAL",
+        details: { 
+          userCount: backupData.users.length, 
+          notificationCount: backupData.notifications?.length || 0 
+        },
+      });
+
+      // Send backup via Telegram
+      await sendBackupToTelegram(backupPath);
+
+      res.json({ 
+        message: "Backup sent to Telegram successfully",
+        userCount: backupData.users.length,
+        notificationCount: backupData.notifications?.length || 0
+      });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
