@@ -35,7 +35,7 @@ Preferred communication style: Simple, everyday language.
 
 **Server Framework**
 - Express.js with TypeScript running on Node.js
-- Session-based authentication using express-session with PostgreSQL session store
+- Session-based authentication using express-session with MemoryStore
 - WebSocket server (ws library) for real-time bidirectional communication
 - RESTful API endpoints for CRUD operations
 
@@ -53,9 +53,10 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage Solutions
 
 **Database**
-- PostgreSQL as the primary relational database
+- SQLite as the primary relational database (using better-sqlite3)
 - Drizzle ORM for type-safe database queries and schema management
-- Connection pooling via node-postgres (pg) library
+- WAL (Write-Ahead Logging) mode enabled for better concurrency
+- Database file stored at: `data/cie_portal.db`
 
 **Schema Design**
 - Users table with role and department associations
@@ -112,10 +113,11 @@ Preferred communication style: Simple, everyday language.
 - Department seeding from configuration
 
 **Session Management**
-- PostgreSQL-backed session store (connect-pg-simple)
+- MemoryStore for session storage (24-hour pruning)
 - HTTP-only cookies for session tokens
 - CSRF protection via session secret
 - Automatic session cleanup on expiry
+- 8-hour session timeout
 
 ### API Architecture
 
@@ -136,60 +138,47 @@ Preferred communication style: Simple, everyday language.
 - Request logging middleware with duration tracking
 - Raw body preservation for webhook verification
 
-## Render Deployment Configuration
+## Deployment Configuration
 
-The application is fully compatible with Render.com deployment:
+The application uses **SQLite** as its database, making deployment simple and portable:
 
 **Environment Variables Required**
-- `DATABASE_URL`: PostgreSQL connection string (provided by Render's PostgreSQL add-on)
-- `PORT`: Server port (automatically set by Render, defaults to 5000)
+- `PORT`: Server port (automatically set by hosting platform, defaults to 5000)
 - `NODE_ENV`: Set to "production" for production deployment
-- `SESSION_SECRET`: Secure session secret key
-- `DB_SSL`: Set to "true" if using Render's PostgreSQL (requires SSL)
+- `SESSION_SECRET`: Secure session secret key (required for session security)
+- `TELEGRAM_BOT_TOKEN` (optional): For automated Telegram backups
+- `TELEGRAM_CHAT_ID` (optional): Telegram chat for backup delivery
 
 **Deployment Steps**
 
-**Option 1: Using render.yaml (Recommended)**
-1. Push your code to GitHub repository
-2. Create new Web Service on Render
-3. Select "Use render.yaml"
-4. Render will automatically:
-   - Create PostgreSQL database instance
-   - Set up DATABASE_URL connection from database to web service
-   - Configure all required environment variables
-   - Set build and start commands
-5. Manually set optional environment variables:
-   - `TELEGRAM_BOT_TOKEN` (for backup functionality)
-   - `TELEGRAM_CHAT_ID` (for backup functionality)
+1. **Prepare the Application**
+   - Push your code to GitHub repository
+   - Ensure `data/admin_backup.json` is in your repository for initial user restoration
+   - The SQLite database file (`data/cie_portal.db`) will be created automatically
 
-**Option 2: Manual Configuration**
-1. Create a new Web Service on Render
-2. Connect your GitHub repository
-3. Add Render PostgreSQL add-on (provides internal DATABASE_URL)
-4. Set environment variables in Render dashboard:
-   - `NODE_ENV=production`
-   - `PORT=5000`
-   - `SESSION_SECRET` (generate a secure random string)
-   - `DATABASE_URL` (automatically provided by PostgreSQL add-on)
-   - `DB_SSL=true`
-   - `TELEGRAM_BOT_TOKEN` (optional)
-   - `TELEGRAM_CHAT_ID` (optional)
-5. Build command: `npm run build`
-6. Start command: `npm start`
+2. **Deploy to Hosting Platform**
+   - Deploy to any Node.js hosting platform (Render, Railway, Heroku, etc.)
+   - Set environment variables in the platform dashboard:
+     - `NODE_ENV=production`
+     - `PORT=5000` (or let platform set automatically)
+     - `SESSION_SECRET` (generate a secure random string)
+     - `TELEGRAM_BOT_TOKEN` (optional)
+     - `TELEGRAM_CHAT_ID` (optional)
+   - Build command: `npm run build`
+   - Start command: `npm start`
 
-**Database Connection:**
-The render.yaml configuration automatically wires the DATABASE_URL from the PostgreSQL database to the web service using:
-```yaml
-- key: DATABASE_URL
-  fromDatabase:
-    name: cie-faculty-db
-    property: connectionString
-```
-This ensures migrations can run during deployment and the server can connect to the database at runtime.
+3. **Database Persistence**
+   - **Important**: The SQLite database is stored in the `data/` directory
+   - For platforms with ephemeral filesystems (like Render free tier), the database will reset on each deployment
+   - For persistent storage:
+     - Use a platform with persistent disks (Render paid tier, Railway, VPS)
+     - Or migrate to PostgreSQL for cloud deployments (requires code changes)
+     - Backups are automatically created in `data/admin_backup.json` and can be sent to Telegram
 
 **Key Features**
-- Server listens on `0.0.0.0:PORT` (Render-compatible)
-- Automatic database schema push on deployment
+- Server listens on `0.0.0.0:PORT` (cloud-compatible)
+- No external database required - SQLite is embedded
+- Automatic user and notification restoration from backup on startup
 - Cron jobs for image cleanup (runs hourly)
 - WebSocket support for real-time features
 - Production-ready build pipeline with Vite + ESBuild
@@ -206,10 +195,11 @@ The application includes a comprehensive backup system that preserves user crede
 - Updated automatically when: users sign up, notifications are posted/deleted, or users are deleted
 
 **Backup Restoration**
-- On system initialization, the app automatically restores all users from `admin_backup.json`
+- On system initialization, the app automatically restores all users and notifications from `admin_backup.json`
 - Users in the backup file can login immediately without needing to create new accounts
+- Notifications are restored with their original IDs, reactions, and comments
 - Password detection: Automatically handles both bcrypt hashes and plaintext passwords
-- Missing users are created, existing users are preserved
+- Missing users/notifications are created, existing ones are preserved
 
 **Scheduled Telegram Backup**
 - Configured via `config.json` → `system.backupIntervalHours` (default: 24 hours)
@@ -217,10 +207,11 @@ The application includes a comprehensive backup system that preserves user crede
 - Requires environment variables: `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`
 - If Telegram credentials are not configured, local backups still work normally
 
-**Docker/Render Deployment**
-- Dockerfile supports loading backups via `BACKUP` environment variable (raw JSON string)
-- Alternatively, use `BACKUP_FILE` environment variable to copy from a file path
-- Backup file from the image is used if neither environment variable is provided
+**Production Deployment Backups**
+- Include `data/admin_backup.json` in your deployment repository
+- On startup, the system automatically restores users and notifications from this file
+- For platforms with ephemeral storage, commit the backup file to ensure data persistence across deployments
+- Scheduled Telegram backups ensure you always have an off-server copy
 
 ### Security Considerations and Recommendations
 

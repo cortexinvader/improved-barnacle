@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, MessageCircle, Share2, AlertCircle, Info, Flame } from "lucide-react";
+import { Heart, MessageCircle, AlertCircle, Info, Flame } from "lucide-react";
 
 interface NotificationCardProps {
   id: string;
@@ -150,16 +150,6 @@ export default function NotificationCard({
           >
             <MessageCircle className="w-4 h-4" />
             <span className="text-xs">{displayCommentCount}</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => console.log('Share notification')}
-            className="gap-1.5"
-            data-testid="button-share"
-          >
-            <Share2 className="w-4 h-4" />
           </Button>
         </div>
 

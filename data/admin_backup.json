@@ -1,6 +1,6 @@
 {
   "backupCreated": true,
-  "timestamp": "2025-11-07T23:41:26.418Z",
+  "timestamp": "2025-11-08T00:07:27.101Z",
   "users": [
     {
       "username": "faculty_gov",
@@ -70,7 +70,9 @@
       "content": "Yo",
       "postedBy": "is_governor",
       "targetDepartmentName": "Information Systems",
-      "reactions": {},
+      "reactions": {
+        "heart": 1
+      },
       "comments": [],
       "createdAt": "2025-11-07T23:41:26.000Z"
     }

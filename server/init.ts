@@ -1,4 +1,6 @@
 import { storage } from "./storage";
+import { db } from "./db";
+import * as schema from "@shared/schema";
 import bcrypt from "bcryptjs";
 import fs from "fs/promises";
 import path from "path";
@@ -39,6 +41,7 @@ interface Config {
 
 interface BackupData {
   backupCreated: boolean;
+  timestamp?: string;
   users: Array<{
     username: string;
     password?: string; // Password might be hashed or not depending on backup source
@@ -46,6 +49,18 @@ interface BackupData {
     regNumber?: string;
     role: string;
     departmentName?: string;
+  }>;
+  notifications?: Array<{
+    id: string;
+    type: string;
+    notificationType: string;
+    title: string;
+    content: string;
+    postedBy: string;
+    targetDepartmentName?: string | null;
+    reactions: any;
+    comments: any[];
+    createdAt: string;
   }>;
 }
 
@@ -65,6 +80,7 @@ export async function initializeSystem() {
     await initializeDepartments(config.departments);
     await initializeDefaultRooms(config.departments);
     await restoreUsersFromBackup();
+    await restoreNotificationsFromBackup();
     await initializeGovernors(config);
     await syncConfigUsersToBackup(config);
 
@@ -168,6 +184,47 @@ async function restoreUsersFromBackup() {
     console.log(`  ✓ Restored ${restoredCount} users from backup`);
   } catch (error) {
     console.log("  ℹ No backup file found or error reading backup, continuing without restoring users.");
+  }
+}
+
+async function restoreNotificationsFromBackup() {
+  console.log("🔄 Restoring notifications from backup...");
+
+  try {
+    const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
+    const backupData = await fs.readFile(backupPath, "utf-8");
+    const backup: BackupData = JSON.parse(backupData);
+
+    if (!backup.backupCreated || !Array.isArray(backup.notifications) || backup.notifications.length === 0) {
+      console.log("  ℹ No notifications to restore");
+      return;
+    }
+
+    let restoredCount = 0;
+    for (const notifData of backup.notifications) {
+      // Check if notification already exists by ID
+      const existing = await storage.getNotification(notifData.id);
+      if (!existing) {
+        // Insert directly into database with the backup ID preserved
+        await db.insert(schema.notifications).values({
+          id: notifData.id,
+          type: notifData.type,
+          notificationType: notifData.notificationType,
+          title: notifData.title,
+          content: notifData.content,
+          postedBy: notifData.postedBy,
+          targetDepartmentName: notifData.targetDepartmentName || null,
+          reactions: notifData.reactions || {},
+          comments: notifData.comments || [],
+          createdAt: new Date(notifData.createdAt),
+        });
+        restoredCount++;
+      }
+    }
+
+    console.log(`  ✓ Restored ${restoredCount} notifications from backup`);
+  } catch (error) {
+    console.log("  ℹ No backup file found or error reading backup, continuing without restoring notifications.");
   }
 }
 
