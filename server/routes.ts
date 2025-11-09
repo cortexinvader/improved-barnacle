@@ -267,14 +267,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password: _, ...userWithoutPassword } = updatedUser;
       req.session.user = userWithoutPassword as User;
 
-      // Update local backup file immediately (without sending to Telegram)
-      try {
-        await generateAdminBackup();
-        console.log("✓ Local backup updated after user profile update");
-      } catch (error) {
-        console.error("✗ Local backup update failed after profile update:", error);
-      }
-
       res.json({ user: userWithoutPassword });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -486,15 +478,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const notification = await storage.updateNotification(req.params.id, req.body);
-
-      // Update local backup file immediately (without sending to Telegram)
-      try {
-        await generateAdminBackup();
-        console.log("✓ Local backup updated after notification edit");
-      } catch (error) {
-        console.error("✗ Local backup update failed after notification edit:", error);
-      }
-
       res.json(notification);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
