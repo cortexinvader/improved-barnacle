@@ -4,6 +4,7 @@ import * as schema from "@shared/schema";
 import bcrypt from "bcryptjs";
 import fs from "fs/promises";
 import path from "path";
+import { logger } from "./logger";
 
 interface Config {
   app: {
@@ -81,37 +82,44 @@ async function hashPassword(password: string): Promise<string> {
 // Run database migrations automatically
 async function runMigrations() {
   try {
-    console.log("🔄 Checking database schema...");
+    logger.info("Checking database schema...");
 
     // Try to query existing tables to see if schema exists
     try {
       await db.select().from(schema.users).limit(1);
+      logger.info("Database schema already exists, skipping migrations");
       console.log("✅ Database schema already exists, skipping migrations");
       return;
     } catch (queryError) {
       // Tables don't exist, need to run migrations
+      logger.info("Running database migrations...");
       console.log("📝 Running database migrations...");
       try {
         const { execSync } = await import("child_process");
         execSync("npm run db:push", { stdio: "inherit" });
+        logger.info("Database migrations completed successfully");
         console.log("✅ Database migrations completed");
       } catch (migrationError: any) {
         // Check if it's just index already exists error
         if (migrationError.message?.includes("already exists")) {
+          logger.warn("Some indexes already exist, continuing...");
           console.log("⚠️ Some indexes already exist, continuing...");
         } else {
+          logger.error("Migration failed", migrationError);
           console.error("❌ Migration error:", migrationError);
           throw migrationError;
         }
       }
     }
   } catch (error) {
+    logger.warn("Migration process completed with warnings", { error });
     console.log("⚠️ Migration process completed with warnings");
     // Continue with initialization even if there are warnings
   }
 }
 
 export async function initializeSystem() {
+  logger.info("Initializing CIE Faculty Portal...");
   console.log("🚀 Initializing CIE Faculty Portal...");
 
   try {
@@ -129,19 +137,23 @@ export async function initializeSystem() {
     await initializeGovernors(config);
     await syncConfigUsersToBackup(config);
 
+    logger.info("System initialization complete");
     console.log("✅ System initialization complete");
   } catch (error) {
+    logger.error("Initialization failed", error);
     console.error("❌ Initialization error:", error);
   }
 }
 
 async function initializeDepartments(departments: string[]) {
+  logger.info("Initializing departments...", { count: departments.length });
   console.log("📚 Initializing departments...");
 
   for (const deptName of departments) {
     const existing = await storage.getDepartmentByName(deptName);
     if (!existing) {
       await storage.createDepartment({ name: deptName });
+      logger.debug(`Created department: ${deptName}`);
       console.log(`  ✓ Created department: ${deptName}`);
     }
   }

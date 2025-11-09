@@ -1,31 +1,25 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, WebSocket } from "ws";
+import { WebSocketServer, type WebSocket as WSWebSocket } from "ws";
 import session from "express-session";
 import memorystore from "memorystore";
 import connectPgSimple from "connect-pg-simple";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { db } from "./db";
-import { users, notifications, chatRooms, chatMessages, reactions, comments, subscriptions } from "../shared/schema";
+import { users, notifications, rooms, messages, pushSubscriptions } from "../shared/schema";
 import { eq, desc, and, or, inArray, sql, not } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "./auth";
-import { uploadLimiter, uploadToStorage } from "./storage";
-import { checkIsImage } from "./storage";
 import multer from "multer";
-import { scheduleImageCleanup } from "./storage";
-import { getBackupData, restoreAdminUser, updateBackup } from "./telegram";
 import { sendBackupToTelegram } from "./telegram";
-import type { Server } from 'http';
-import WebSocket from 'ws';
-import { sendPushNotification, createSubscription } from './webpush';
-import { callAI } from './ai';
+import { sendPushNotification } from './webpush';
 import path from 'path';
 import pg from 'pg';
 
 import { storage } from "./storage";
 import { registerStudent, loginUser, isAuthorized, canAccessDepartment } from "./auth";
 import { initializeSystem } from "./init";
+import { logger } from "./logger";
 import fs from "fs/promises";
 import cron from "node-cron";
 import type { User } from "@shared/schema";
@@ -43,7 +37,7 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-interface WebSocketClient extends WebSocket {
+interface WebSocketClient extends WSWebSocket {
   userId?: string;
   roomId?: string;
 }
@@ -145,29 +139,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     cron.schedule(cronExpression, async () => {
       try {
+        logger.info("Running scheduled backup...");
         console.log("🔄 Running scheduled backup...");
         const { backupPath } = await generateAdminBackup();
         await sendBackupToTelegram(backupPath);
+        logger.info("Scheduled backup completed successfully");
         console.log("✓ Scheduled backup completed");
       } catch (error) {
+        logger.error("Scheduled backup failed", error);
         console.error("✗ Scheduled backup failed:", error);
       }
     });
 
+    logger.info(`Scheduled backup configured`, { intervalHours: backupIntervalHours, cronExpression });
     console.log(`✓ Scheduled backup configured (every ${backupIntervalHours} hours)`);
   } catch (error) {
+    logger.error("Failed to configure scheduled backup", error);
     console.error("✗ Failed to configure scheduled backup:", error);
   }
 
   cron.schedule("0 * * * *", async () => {
     try {
+      logger.debug("Running cleanup job for expired images and documents");
       const expiredImages = await storage.getExpiredImages();
       for (const msg of expiredImages) {
         if (msg.imageUrl) {
           try {
             await fs.unlink(msg.imageUrl);
             await storage.updateMessage(msg.id, { imageUrl: null, imageExpiry: null });
+            logger.debug(`Deleted expired image`, { messageId: msg.id, imageUrl: msg.imageUrl });
           } catch (err) {
+            logger.warn("Failed to delete expired image", err, { messageId: msg.id });
             console.error("Error deleting expired image:", err);
           }
         }
@@ -178,11 +180,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await fs.unlink(doc.path);
           await storage.deleteDocument(doc.id);
+          logger.debug(`Deleted expired document`, { docId: doc.id, path: doc.path });
         } catch (err) {
+          logger.warn("Failed to delete expired document", err, { docId: doc.id });
           console.error("Error deleting expired document:", err);
         }
       }
+      logger.debug("Cleanup job completed", { expiredImages: expiredImages.length, expiredDocs: expiredDocs.length });
     } catch (error) {
+      logger.error("Cleanup job failed", error);
       console.error("Cleanup job error:", error);
     }
   });
