@@ -4,6 +4,14 @@
 
 The CIE Faculty Portal is a comprehensive Progressive Web Application (PWA) designed for the Computer and Information Engineering faculty. It serves as a centralized platform for multi-role educational management, enabling communication between students, department governors, faculty governors, and administrators. The system provides real-time chat capabilities, notifications management, document sharing, and role-based access control across four departments: Computer Engineering, Information Systems, Software Engineering, and Network Engineering.
 
+## Recent Changes
+
+**Portability Improvements (November 2025)**
+- Fixed fs module imports in `server/telegram.ts` to properly use sync methods from 'fs' instead of 'fs/promises'
+- Removed Replit-specific `reusePort` option from `server/index.ts` to ensure compatibility with standard Node.js servers
+- Application now works on any Node.js 20+ platform (local development, standard hosting, Docker, etc.)
+- Graceful Replit detection remains in `vite.config.ts` for HMR configuration (falls back to defaults on other platforms)
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
