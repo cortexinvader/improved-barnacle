@@ -106,3 +106,7 @@ export function useLogout() {
     },
   });
 }
+
+export function useUser() {
+  return useAuth();
+}
