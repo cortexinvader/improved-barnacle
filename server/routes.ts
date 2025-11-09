@@ -38,7 +38,7 @@ const allClients = new Set<WebSocketClient>();
 async function generateAdminBackup(): Promise<{ backupPath: string; backupData: any }> {
   const users = await storage.getAllUsers();
   const notifications = await storage.getAllNotifications();
-  
+
   const backupData = {
     backupCreated: true,
     timestamp: new Date().toISOString(),
@@ -214,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/auto-login", async (req: Request, res: Response) => {
     try {
       const { username } = req.body;
-      
+
       if (!username) {
         return res.status(400).json({ error: "Username is required" });
       }
@@ -392,11 +392,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (notification.targetDepartmentName === null) {
           return true;
         }
-        
+
         if (user.role === "admin" || user.role === "faculty-governor") {
           return true;
         }
-        
+
         return notification.targetDepartmentName === user.departmentName;
       });
 
@@ -492,7 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { reactionType } = req.body;
       const notification = await storage.getNotification(req.params.id);
-      
+
       if (!notification) {
         return res.status(404).json({ error: "Notification not found" });
       }
@@ -519,7 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const notification = await storage.getNotification(req.params.id);
-      
+
       if (!notification) {
         return res.status(404).json({ error: "Notification not found" });
       }
@@ -562,7 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const canDelete = 
           notification.postedBy === req.session.user.username ||
           notification.targetDepartmentName === req.session.user.departmentName;
-        
+
         if (!canDelete) {
           return res.status(403).json({ error: "You can only delete your own notifications or notifications for your department" });
         }
@@ -1003,7 +1003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (msg) {
             const reactions = (msg.reactions as any) || {};
             const reactionKey = message.emoji || "heart";
-            
+
             reactions[reactionKey] = (reactions[reactionKey] || 0) + 1;
             await storage.updateMessage(message.messageId, { reactions });
 
