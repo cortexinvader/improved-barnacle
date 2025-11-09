@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, Download, Trash2, Clock } from "lucide-react";
+import { Upload, FileText, Download, Trash2, Clock, Eye } from "lucide-react";
 
 interface Document {
   id: string;
@@ -14,6 +14,8 @@ interface Document {
   uploadedAt: string;
   size: string;
   expiration?: string;
+  path?: string;
+  fileType?: string;
 }
 
 export default function DocumentUpload() {
@@ -36,6 +38,25 @@ export default function DocumentUpload() {
     } catch (error) {
       console.error('Error loading documents:', error);
     }
+  };
+
+  const handleDownload = (doc: Document) => {
+    if (!doc.path) return;
+    const parts = doc.path.split(/[/\\]/);
+    const filename = parts[parts.length - 1] || 'document';
+    const link = document.createElement('a');
+    link.href = `/uploads/${filename}`;
+    link.download = doc.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handlePreview = (doc: Document) => {
+    if (!doc.path) return;
+    const parts = doc.path.split(/[/\\]/);
+    const filename = parts[parts.length - 1] || 'document';
+    window.open(`/uploads/${filename}`, '_blank');
   };
 
   const handleDelete = async (docId: string, owner: string) => {
@@ -171,10 +192,23 @@ export default function DocumentUpload() {
                 </Badge>
                 
                 <div className="flex gap-1 shrink-0">
+                  {doc.fileType?.toLowerCase() === '.pdf' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handlePreview(doc)}
+                      data-testid={`button-preview-${doc.id}`}
+                      title="Preview PDF"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => handleDownload(doc)}
                     data-testid={`button-download-${doc.id}`}
+                    title="Download"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
@@ -183,6 +217,7 @@ export default function DocumentUpload() {
                     size="sm"
                     onClick={() => handleDelete(doc.id, doc.owner)}
                     data-testid={`button-delete-${doc.id}`}
+                    title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

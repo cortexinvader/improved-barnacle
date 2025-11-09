@@ -34,12 +34,29 @@ const tutorialSteps = [
 export default function SignupTutorial({ open, onClose }: SignupTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
-  const handleNext = () => {
+  const markTutorialComplete = async () => {
+    try {
+      await fetch('/api/auth/tutorial', {
+        method: 'PATCH',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error('Failed to mark tutorial as complete:', error);
+    }
+  };
+
+  const handleNext = async () => {
     if (currentStep < tutorialSteps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
+      await markTutorialComplete();
       onClose();
     }
+  };
+
+  const handleSkip = async () => {
+    await markTutorialComplete();
+    onClose();
   };
 
   const handlePrevious = () => {
@@ -96,7 +113,7 @@ export default function SignupTutorial({ open, onClose }: SignupTutorialProps) {
             Previous
           </Button>
           
-          <Button onClick={onClose} variant="ghost" data-testid="button-tutorial-skip">
+          <Button onClick={handleSkip} variant="ghost" data-testid="button-tutorial-skip">
             Skip
           </Button>
           

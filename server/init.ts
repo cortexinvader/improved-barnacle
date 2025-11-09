@@ -6,36 +6,45 @@ import fs from "fs/promises";
 import path from "path";
 
 interface Config {
-  facultyGovernor: {
-    username: string;
-    password: string;
-    department: string;
-    phone?: string; // Added phone
+  app: {
+    name: string;
+    developer_contact: string;
+    image_expire_hours: number;
+    document_expire_hours: number;
+    session_timeout_minutes: number;
   };
-  departmentGovernors: Array<{
-    username: string;
-    password: string;
-    department: string;
-    phone?: string; // Added phone
-  }>;
+  departments: string[];
   admin: {
     username: string;
     password: string;
-    phone?: string; // Added phone
+    phone?: string;
   };
-  departments: string[];
-  aiApi: {
+  faculty_governor: {
+    username: string;
+    password: string;
+    phone?: string;
+  };
+  department_governors: Array<{
+    username: string;
+    password: string;
+    department: string;
+    phone?: string;
+  }>;
+  ai: {
     endpoint: string;
-    key: string;
   };
-  developer: {
-    name: string;
-    contact: string;
+  telegram: {
+    bot_token?: string;
+    chat_id?: string;
+  };
+  push: {
+    vapid_public_key?: string;
+    vapid_private_key?: string;
+    contact_email?: string;
   };
   system: {
-    imageExpiryHours: number;
-    maxUploadSizeMB: number;
-    sessionTimeoutMinutes: number;
+    backup_interval_hours: number;
+    telegram_send_interval_hours: number;
   };
 }
 
@@ -278,25 +287,25 @@ async function restoreNotificationsFromBackup() {
 async function initializeGovernors(config: Config) {
   console.log("👥 Initializing governors and admin...");
 
-  const facultyGov = await storage.getUserByUsername(config.facultyGovernor.username);
+  const facultyGov = await storage.getUserByUsername(config.faculty_governor.username);
   if (!facultyGov) {
     await storage.createUser({
-      username: config.facultyGovernor.username,
-      password: await hashPassword(config.facultyGovernor.password),
-      phone: config.facultyGovernor.phone || "+20 000 000 0000", // Use phone from config or default
+      username: config.faculty_governor.username,
+      password: await hashPassword(config.faculty_governor.password),
+      phone: config.faculty_governor.phone || "+20 000 000 0000",
       role: "faculty-governor",
-      departmentName: "All Departments", // Assuming faculty governor oversees all departments
+      departmentName: "All Departments",
     });
-    console.log(`  ✓ Created Faculty Governor: ${config.facultyGovernor.username}`);
+    console.log(`  ✓ Created Faculty Governor: ${config.faculty_governor.username}`);
   }
 
-  for (const gov of config.departmentGovernors) {
+  for (const gov of config.department_governors) {
     const existingGov = await storage.getUserByUsername(gov.username);
     if (!existingGov) {
       await storage.createUser({
         username: gov.username,
         password: await hashPassword(gov.password),
-        phone: gov.phone || "+20 000 000 0000", // Use phone from config or default
+        phone: gov.phone || "+20 000 000 0000",
         role: "department-governor",
         departmentName: gov.department,
       });
@@ -309,9 +318,9 @@ async function initializeGovernors(config: Config) {
     await storage.createUser({
       username: config.admin.username,
       password: await hashPassword(config.admin.password),
-      phone: config.admin.phone || "+20 000 000 0000", // Use phone from config or default
+      phone: config.admin.phone || "+20 000 000 0000",
       role: "admin",
-      departmentName: "All Departments", // Admin has access to all departments
+      departmentName: "All Departments",
     });
     console.log(`  ✓ Created Admin: ${config.admin.username}`);
   }
@@ -334,8 +343,8 @@ async function syncConfigUsersToBackup(config: Config) {
     const configUsernames = new Set<string>();
 
     // Add faculty governor
-    configUsernames.add(config.facultyGovernor.username);
-    const facultyGov = await storage.getUserByUsername(config.facultyGovernor.username);
+    configUsernames.add(config.faculty_governor.username);
+    const facultyGov = await storage.getUserByUsername(config.faculty_governor.username);
     if (facultyGov) {
       const existingIndex = backup.users.findIndex(u => u.username === facultyGov.username);
       const userData = {
@@ -353,7 +362,7 @@ async function syncConfigUsersToBackup(config: Config) {
     }
 
     // Add department governors
-    for (const gov of config.departmentGovernors) {
+    for (const gov of config.department_governors) {
       configUsernames.add(gov.username);
       const departmentGov = await storage.getUserByUsername(gov.username);
       if (departmentGov) {

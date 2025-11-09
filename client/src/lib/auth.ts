@@ -7,6 +7,7 @@ export interface User {
   departmentName: string;
   phone: string;
   regNumber?: string;
+  tutorialSeen: boolean;
 }
 
 interface LoginCredentials {

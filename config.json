@@ -1,40 +1,10 @@
 {
-  "facultyGovernor": {
-    "username": "faculty_gov",
-    "password": "faculty123",
-    "phone": "+20 000 000 0000",
-    "department": "All Departments"
-  },
-  "departmentGovernors": [
-    {
-      "username": "ce_governor",
-      "password": "ce123",
-      "phone": "+20 000 000 0000",
-      "department": "Computer Engineering"
-    },
-    {
-      "username": "is_governor",
-      "password": "is123",
-      "phone": "+20 000 000 0000",
-      "department": "Information Systems"
-    },
-    {
-      "username": "se_governor",
-      "password": "se123",
-      "phone": "+20 000 000 0000",
-      "department": "Software Engineering"
-    },
-    {
-      "username": "ne_governor",
-      "password": "ne123",
-      "phone": "+20 000 000 0000",
-      "department": "Network Engineering"
-    }
-  ],
-  "admin": {
-    "username": "admin",
-    "password": "admin123",
-    "phone": "+20 000 000 0000"
+  "app": {
+    "name": "CIESA Faculty Portal",
+    "developer_contact": "Cortex Invader <+2348088941798>",
+    "image_expire_hours": 3,
+    "document_expire_hours": 24,
+    "session_timeout_minutes": 480
   },
   "departments": [
     "Computer Engineering",
@@ -42,17 +12,56 @@
     "Software Engineering",
     "Network Engineering"
   ],
-  "aiApi": {
-    "endpoint": "https://text.pollinations.ai"
+  "admin": {
+    "username": "admin",
+    "password": "ChangeMe123!",
+    "phone": "+20 000 000 0000"
   },
-  "developer": {
-    "name": "Cortex Invader",
-    "contact": "+2348088941798"
+  "faculty_governor": {
+    "username": "faculty_gov",
+    "password": "ChangeMe123!",
+    "phone": "+20 000 000 0000"
+  },
+  "department_governors": [
+    {
+      "username": "ceng_gov",
+      "password": "ChangeMe123!",
+      "department": "Computer Engineering",
+      "phone": "+20 000 000 0001"
+    },
+    {
+      "username": "isys_gov",
+      "password": "ChangeMe123!",
+      "department": "Information Systems",
+      "phone": "+20 000 000 0002"
+    },
+    {
+      "username": "seng_gov",
+      "password": "ChangeMe123!",
+      "department": "Software Engineering",
+      "phone": "+20 000 000 0003"
+    },
+    {
+      "username": "neng_gov",
+      "password": "ChangeMe123!",
+      "department": "Network Engineering",
+      "phone": "+20 000 000 0004"
+    }
+  ],
+  "ai": {
+    "endpoint": "https://text.pollinations.ai/v1/ai"
+  },
+  "telegram": {
+    "bot_token": "",
+    "chat_id": ""
+  },
+  "push": {
+    "vapid_public_key": "",
+    "vapid_private_key": "",
+    "contact_email": "dev@example.com"
   },
   "system": {
-    "imageExpiryHours": 3,
-    "maxUploadSizeMB": 10,
-    "sessionTimeoutMinutes": 480,
-    "backupIntervalHours": 24
+    "backup_interval_hours": 24,
+    "telegram_send_interval_hours": 24
   }
 }

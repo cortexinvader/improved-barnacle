@@ -73,6 +73,11 @@ async function generateAdminBackup(): Promise<{ backupPath: string; backupData: 
 export async function registerRoutes(app: Express): Promise<Server> {
   await initializeSystem();
 
+  const configPath = path.join(process.cwd(), "config.json");
+  const configData = await fs.readFile(configPath, "utf-8");
+  const config = JSON.parse(configData);
+  const sessionTimeoutMinutes = config.app?.session_timeout_minutes || 480;
+
   const MemoryStore = createMemoryStore(session);
   app.use(
     session({
@@ -83,9 +88,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: 8 * 60 * 60 * 1000,
+        maxAge: sessionTimeoutMinutes * 60 * 1000,
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
+        sameSite: 'lax',
       },
     })
   );
@@ -244,6 +250,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ user: req.session.user });
   });
 
+  app.patch("/api/auth/tutorial", async (req: Request, res: Response) => {
+    try {
+      if (!req.session.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      const updatedUser = await storage.updateUser(req.session.user.id, {
+        tutorialSeen: true
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      req.session.user = userWithoutPassword as User;
+
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/config", async (req: Request, res: Response) => {
     try {
       const configData = await fs.readFile("config.json", "utf-8");
@@ -269,8 +298,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Not authenticated" });
       }
 
+      const user = req.session.user;
       let rooms;
-      if (req.session.user.role === "admin" || req.session.user.role === "faculty-governor") {
+      if (user.role === "admin" || user.role === "faculty-governor") {
         // Admin and faculty governors see all rooms
         rooms = await storage.getAllRooms();
       } else {
@@ -278,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const allRooms = await storage.getAllRooms();
         rooms = allRooms.filter(room => 
           room.type === "general" || 
-          room.departmentName === req.session.user.departmentName ||
+          room.departmentName === user.departmentName ||
           room.departmentName === null
         );
       }
@@ -355,10 +385,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Not authenticated" });
       }
 
-      // Everyone can see all notifications
-      const notifications = await storage.getAllNotifications();
+      const user = req.session.user;
+      const allNotifications = await storage.getAllNotifications();
 
-      res.json(notifications);
+      const visibleNotifications = allNotifications.filter(notification => {
+        if (notification.targetDepartmentName === null) {
+          return true;
+        }
+        
+        if (user.role === "admin" || user.role === "faculty-governor") {
+          return true;
+        }
+        
+        return notification.targetDepartmentName === user.departmentName;
+      });
+
+      res.json(visibleNotifications);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }
@@ -385,9 +427,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let target = null;
 
       if (req.session.user.role === "department-governor") {
-        type = "department";
-        target = req.session.user.departmentName;
-      } else if (targetDepartmentName && targetDepartmentName !== "all" && targetDepartmentName !== "") {
+        if (targetDepartmentName === null || targetDepartmentName === undefined) {
+          type = "general";
+          target = null;
+        } else {
+          type = "department";
+          target = req.session.user.departmentName;
+        }
+      } else if (targetDepartmentName && targetDepartmentName !== "") {
         type = "department";
         target = targetDepartmentName;
       }

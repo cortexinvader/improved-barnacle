@@ -183,19 +183,20 @@ export default function ChatInterface({ roomName, currentUser, roomId }: ChatInt
     }
 
     const isAIQuery = message.toLowerCase().includes('@ai');
+    const cleanedMessage = isAIQuery ? message.replace(/@ai/gi, '').trim() : message;
 
     const formatting: any = {};
     if (isBold) formatting.bold = true;
     if (isItalic) formatting.italic = true;
     if (textColor !== "#000000") formatting.color = textColor;
 
-    // Send message through WebSocket
+    // Send message through WebSocket (with @ai stripped)
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
         type: 'message',
         roomId: roomId,
         sender: currentUser,
-        content: message,
+        content: cleanedMessage,
         formatting: Object.keys(formatting).length > 0 ? formatting : null
       }));
     }
@@ -206,9 +207,7 @@ export default function ChatInterface({ roomName, currentUser, roomId }: ChatInt
     setTextColor("#000000");
 
     if (isAIQuery) {
-      // Send to custom AI API
-      const aiMessage = message.replace('@ai', '').trim();
-
+      // Send to custom AI API with sender context
       fetch('/api/ai/chat', {
         method: 'POST',
         headers: {
@@ -216,9 +215,9 @@ export default function ChatInterface({ roomName, currentUser, roomId }: ChatInt
         },
         credentials: 'include',
         body: JSON.stringify({
-          message: aiMessage,
+          message: cleanedMessage,
           roomId: roomId,
-          context: `Chat room: ${roomName}`,
+          context: `Chat room: ${roomName}, Asked by: ${currentUser}`,
         }),
       })
         .then(response => response.json())

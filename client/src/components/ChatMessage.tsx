@@ -25,6 +25,16 @@ interface ChatMessageProps {
   onUsernameClick?: (username: string) => void;
 }
 
+const getUserRoleTag = (username: string): { text: string; icon: string } | null => {
+  if (username === "admin") {
+    return { text: "Admin", icon: "⚫" };
+  }
+  if (username.endsWith("_gov") || username.includes("governor")) {
+    return { text: "Governor", icon: "🟠" };
+  }
+  return null;
+}
+
 export default function ChatMessage({
   id,
   sender,
@@ -96,6 +106,11 @@ export default function ChatMessage({
             {sender}
           </span>
           {isAI && <Badge variant="secondary" className="text-[10px] h-4 px-1">AI</Badge>}
+          {!isAI && getUserRoleTag(sender) && (
+            <span className="text-[10px]" title={getUserRoleTag(sender)!.text}>
+              {getUserRoleTag(sender)!.icon}
+            </span>
+          )}
         </div>
 
         {replyTo && (

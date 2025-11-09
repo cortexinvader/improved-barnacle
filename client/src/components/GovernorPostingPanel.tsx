@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AlertCircle, Info, Flame, Send } from "lucide-react";
 
 interface GovernorPostingPanelProps {
@@ -16,6 +17,7 @@ export default function GovernorPostingPanel({ role, department }: GovernorPosti
   const [content, setContent] = useState("");
   const [postType, setPostType] = useState<"urgent" | "regular" | "cruise">("regular");
   const [targetDepartment, setTargetDepartment] = useState("");
+  const [postGenerally, setPostGenerally] = useState(false);
 
   const postTypes = [
     { value: "urgent", label: "Urgent", icon: AlertCircle, color: "text-destructive" },
@@ -24,9 +26,19 @@ export default function GovernorPostingPanel({ role, department }: GovernorPosti
   ];
 
   const handlePost = async () => {
-    console.log('Posting:', { content, postType, targetDepartment, role });
+    console.log('Posting:', { content, postType, targetDepartment, role, postGenerally });
     
     try {
+      let finalTargetDepartment = null;
+      
+      if (postGenerally) {
+        finalTargetDepartment = null;
+      } else if (role === "department") {
+        finalTargetDepartment = department || null;
+      } else {
+        finalTargetDepartment = targetDepartment || null;
+      }
+      
       const response = await fetch('/api/notifications', {
         method: 'POST',
         headers: {
@@ -37,7 +49,7 @@ export default function GovernorPostingPanel({ role, department }: GovernorPosti
           title: "Notification",
           content,
           notificationType: postType,
-          targetDepartmentName: targetDepartment || null,
+          targetDepartmentName: finalTargetDepartment,
         }),
       });
 
@@ -45,7 +57,7 @@ export default function GovernorPostingPanel({ role, department }: GovernorPosti
         setContent("");
         setPostType("regular");
         setTargetDepartment("");
-        // Refresh the page or show success message
+        setPostGenerally(false);
         window.location.reload();
       } else {
         const error = await response.json();
@@ -95,20 +107,39 @@ export default function GovernorPostingPanel({ role, department }: GovernorPosti
         {role === "faculty" && (
           <div className="space-y-2">
             <Label htmlFor="target-dept">Target Department (Optional)</Label>
-            <Select value={targetDepartment} onValueChange={setTargetDepartment}>
+            <Select 
+              value={targetDepartment} 
+              onValueChange={setTargetDepartment}
+              disabled={postGenerally}
+            >
               <SelectTrigger id="target-dept" data-testid="select-target-department">
                 <SelectValue placeholder="All departments" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                <SelectItem value="computer-engineering">Computer Engineering</SelectItem>
-                <SelectItem value="information-systems">Information Systems</SelectItem>
-                <SelectItem value="software-engineering">Software Engineering</SelectItem>
-                <SelectItem value="network-engineering">Network Engineering</SelectItem>
+                <SelectItem value="">All Departments</SelectItem>
+                <SelectItem value="Computer Engineering">Computer Engineering</SelectItem>
+                <SelectItem value="Information Systems">Information Systems</SelectItem>
+                <SelectItem value="Software Engineering">Software Engineering</SelectItem>
+                <SelectItem value="Network Engineering">Network Engineering</SelectItem>
               </SelectContent>
             </Select>
           </div>
         )}
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="post-generally"
+            checked={postGenerally}
+            onCheckedChange={(checked) => setPostGenerally(checked as boolean)}
+            data-testid="checkbox-post-generally"
+          />
+          <Label 
+            htmlFor="post-generally"
+            className="text-sm font-normal cursor-pointer"
+          >
+            Post generally (visible to all departments)
+          </Label>
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="content">Notification Content</Label>

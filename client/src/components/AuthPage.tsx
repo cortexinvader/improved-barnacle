@@ -98,6 +98,10 @@ export default function AuthPage({ onLogin, onShowTutorial }: AuthPageProps) {
         onLogin(user);
       }
 
+      if (onShowTutorial && !user.tutorialSeen) {
+        onShowTutorial();
+      }
+
       toast({
         title: "Success!",
         description: "Account created successfully",

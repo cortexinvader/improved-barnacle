@@ -42,7 +42,35 @@
       "phone": "+20 000 000 0000",
       "role": "admin",
       "departmentName": "All Departments"
+    },
+    {
+      "username": "ceng_gov",
+      "password": "$2b$10$6kGi0Auats5mpy2ezdnD4.ZgORLIXRSF8Y0A9vB1UeAc.OVKE1/Qi",
+      "phone": "+20 000 000 0001",
+      "role": "department-governor",
+      "departmentName": "Computer Engineering"
+    },
+    {
+      "username": "isys_gov",
+      "password": "$2b$10$2rVseflQHCSc8soGbqDjauHp5Juqr3u16nQMa6DI9pZNmiIdXTbai",
+      "phone": "+20 000 000 0002",
+      "role": "department-governor",
+      "departmentName": "Information Systems"
+    },
+    {
+      "username": "seng_gov",
+      "password": "$2b$10$3fMzeg7BdEHuVKSQppVhTu31nbnoc2krxP.jE6/DExAnq4nuWzBQ2",
+      "phone": "+20 000 000 0003",
+      "role": "department-governor",
+      "departmentName": "Software Engineering"
+    },
+    {
+      "username": "neng_gov",
+      "password": "$2b$10$HRFGpFmCtdItfh0GQhEbO.5ZFWgTxcQ1Kp5krcy66ydNlzxIGIniW",
+      "phone": "+20 000 000 0004",
+      "role": "department-governor",
+      "departmentName": "Network Engineering"
     }
   ],
-  "timestamp": "2025-11-09T19:39:16.203Z"
+  "timestamp": "2025-11-09T19:49:36.654Z"
 }

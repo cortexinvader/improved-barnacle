@@ -14,6 +14,7 @@ import GovernorPostingPanel from "@/components/GovernorPostingPanel";
 import AdminPanel from "@/components/AdminPanel";
 import DeveloperWatermark from "@/components/DeveloperWatermark";
 import NotificationCard from "@/components/NotificationCard";
+import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, MessageSquare, FileText, User, LogOut, Settings } from "lucide-react";
@@ -130,6 +131,7 @@ function Router() {
 
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{user.role}</Badge>
+            <ThemeToggle />
             <Button
               variant="ghost"
               size="sm"

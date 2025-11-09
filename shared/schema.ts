@@ -11,6 +11,7 @@ export const users = sqliteTable("users", {
   regNumber: text("reg_number"),
   role: text("role").notNull(),
   departmentName: text("department_name").notNull(),
+  tutorialSeen: integer("tutorial_seen", { mode: "boolean" }).default(sql`0`).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()).notNull(),
 });
 
