@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { WebSocketServer, type WebSocket as WSWebSocket } from "ws";
+import { WebSocketServer, type WebSocket as WSWebSocket, WebSocket } from "ws";
 import session from "express-session";
 import memorystore from "memorystore";
 import connectPgSimple from "connect-pg-simple";
