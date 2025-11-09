@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart, MessageCircle, AlertCircle, Info, Flame, Trash2 } from "lucide-react";
-import { useUser } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 
 interface NotificationCardProps {
   id: string;
@@ -49,7 +49,7 @@ export default function NotificationCard({
   const [comment, setComment] = useState("");
   const [localReactions, setLocalReactions] = useState(displayReactions);
   const [reacted, setReacted] = useState({ heart: false, like: false });
-  const { user } = useUser();
+  const { user } = useAuth();
 
   const canDelete = user && (
     user.role === 'admin' || 
