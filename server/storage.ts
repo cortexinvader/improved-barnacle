@@ -186,7 +186,7 @@ export class DbStorage implements IStorage {
     return await db.select().from(schema.messages).where(
       and(
         sql`${schema.messages.imageUrl} IS NOT NULL`,
-        sql`${schema.messages.imageExpiry} < NOW()`
+        sql`${schema.messages.imageExpiry} < CURRENT_TIMESTAMP`
       )
     );
   }
@@ -252,7 +252,7 @@ export class DbStorage implements IStorage {
     return await db.select().from(schema.documents).where(
       and(
         sql`${schema.documents.expiration} IS NOT NULL`,
-        sql`${schema.documents.expiration} < NOW()`
+        sql`${schema.documents.expiration} < CURRENT_TIMESTAMP`
       )
     );
   }
