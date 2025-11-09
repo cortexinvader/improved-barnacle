@@ -88,12 +88,22 @@ async function runMigrations() {
       await db.select().from(schema.users).limit(1);
       console.log("✅ Database schema already exists, skipping migrations");
       return;
-    } catch {
+    } catch (queryError) {
       // Tables don't exist, need to run migrations
       console.log("📝 Running database migrations...");
-      const { execSync } = await import("child_process");
-      execSync("npm run db:push", { stdio: "inherit" });
-      console.log("✅ Database migrations completed");
+      try {
+        const { execSync } = await import("child_process");
+        execSync("npm run db:push", { stdio: "inherit" });
+        console.log("✅ Database migrations completed");
+      } catch (migrationError: any) {
+        // Check if it's just index already exists error
+        if (migrationError.message?.includes("already exists")) {
+          console.log("⚠️ Some indexes already exist, continuing...");
+        } else {
+          console.error("❌ Migration error:", migrationError);
+          throw migrationError;
+        }
+      }
     }
   } catch (error) {
     console.log("⚠️ Migration process completed with warnings");
