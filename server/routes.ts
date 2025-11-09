@@ -2,17 +2,34 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import session from "express-session";
+import memorystore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import { db } from "./db";
+import { users, notifications, chatRooms, chatMessages, reactions, comments, subscriptions } from "../shared/schema";
+import { eq, desc, and, or, inArray, sql, not } from "drizzle-orm";
+import { hashPassword, verifyPassword } from "./auth";
+import { uploadLimiter, uploadToStorage } from "./storage";
+import { checkIsImage } from "./storage";
+import multer from "multer";
+import { scheduleImageCleanup } from "./storage";
+import { getBackupData, restoreAdminUser, updateBackup } from "./telegram";
+import { sendBackupToTelegram } from "./telegram";
+import type { Server } from 'http';
+import WebSocket from 'ws';
+import { sendPushNotification, createSubscription } from './webpush';
+import { callAI } from './ai';
+import path from 'path';
+import pg from 'pg';
+
 import { storage } from "./storage";
 import { registerStudent, loginUser, isAuthorized, canAccessDepartment } from "./auth";
 import { initializeSystem } from "./init";
-import multer from "multer";
-import path from "path";
 import fs from "fs/promises";
 import cron from "node-cron";
 import type { User } from "@shared/schema";
 import { registerAIRoutes } from "./ai";
-import { sendBackupToTelegram } from "./telegram";
-import createMemoryStore from "memorystore";
 
 declare module "express-session" {
   interface SessionData {
@@ -78,15 +95,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const config = JSON.parse(configData);
   const sessionTimeoutMinutes = config.app?.session_timeout_minutes || 480;
 
-  const MemoryStore = createMemoryStore(session);
+  const MemoryStore = memorystore(session);
+  const PgSession = connectPgSimple(session);
+
+  // Use PostgreSQL session store in production if DATABASE_URL is available, otherwise use MemoryStore
+  const sessionStore = process.env.DATABASE_URL 
+    ? new PgSession({
+        pool: new pg.Pool({
+          connectionString: process.env.DATABASE_URL,
+        }),
+        tableName: 'session',
+        createTableIfMissing: true,
+      })
+    : new MemoryStore({
+        checkPeriod: 86400000, // prune expired entries every 24h
+      });
+
   app.use(
     session({
-      store: new MemoryStore({
-        checkPeriod: 86400000, // prune expired entries every 24h
-      }),
       secret: process.env.SESSION_SECRET || "cie-portal-secret-key-change-in-production",
       resave: false,
       saveUninitialized: false,
+      store: sessionStore,
       cookie: {
         maxAge: sessionTimeoutMinutes * 60 * 1000,
         httpOnly: true,

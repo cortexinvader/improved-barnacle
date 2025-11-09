@@ -1,10 +1,18 @@
-
-import fs from "fs/promises";
-import FormData from "form-data";
+import fs from 'fs/promises';
+import FormData from 'form-data';
+import path from 'path';
 
 interface TelegramConfig {
   botToken?: string;
   chatId?: string;
+}
+
+const BACKUP_FILE = process.env.BACKUP_PATH || './data/admin_backup.json';
+
+// Ensure backup directory exists
+const backupDir = path.dirname(BACKUP_FILE);
+if (!fs.existsSync(backupDir)) {
+  fs.mkdirSync(backupDir, { recursive: true });
 }
 
 export async function sendBackupToTelegram(backupFilePath: string): Promise<void> {
