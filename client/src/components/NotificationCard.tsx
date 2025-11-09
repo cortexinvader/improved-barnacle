@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, MessageCircle, AlertCircle, Info, Flame } from "lucide-react";
+import { Heart, MessageCircle, AlertCircle, Info, Flame, Trash2 } from "lucide-react";
+import { useUser } from "@/lib/auth";
 
 interface NotificationCardProps {
   id: string;
@@ -48,6 +49,13 @@ export default function NotificationCard({
   const [comment, setComment] = useState("");
   const [localReactions, setLocalReactions] = useState(displayReactions);
   const [reacted, setReacted] = useState({ heart: false, like: false });
+  const { user } = useUser();
+
+  const canDelete = user && (
+    user.role === 'admin' || 
+    user.role === 'faculty-governor' || 
+    (user.role === 'department-governor' && (user.username === displayAuthor || user.departmentName === displayDepartment))
+  );
 
   const handleReaction = async (reactionType: 'heart' | 'like') => {
     try {
@@ -93,6 +101,28 @@ export default function NotificationCard({
     }
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this notification?')) return;
+
+    try {
+      const response = await fetch(`/api/notifications/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        // Reload the page to remove the deleted notification
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to delete notification');
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Failed to delete notification');
+    }
+  };
+
   const typeConfig = {
     urgent: { icon: AlertCircle, color: "text-destructive", emoji: "🚨" },
     regular: { icon: Info, color: "text-foreground", emoji: "" },
@@ -118,11 +148,24 @@ export default function NotificationCard({
               </p>
             </div>
           </div>
-          {displayDepartment && (
-            <Badge variant="secondary" className="shrink-0">
-              {displayDepartment}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {displayDepartment && (
+              <Badge variant="secondary">
+                {displayDepartment}
+              </Badge>
+            )}
+            {canDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDelete}
+                className="text-destructive hover:text-destructive"
+                data-testid="button-delete-notification"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 
