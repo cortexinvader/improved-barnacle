@@ -1,5 +1,6 @@
 {
   "backupCreated": true,
+  "timestamp": "2025-11-09T23:09:42.246Z",
   "users": [
     {
       "username": "faculty_gov",
@@ -70,7 +71,15 @@
       "phone": "+20 000 000 0004",
       "role": "department-governor",
       "departmentName": "Network Engineering"
+    },
+    {
+      "username": "cortex",
+      "password": "$2b$10$CQAXl.zL8YnRcDWrONcBi.JILotYiolUmtGmGqeeE71RDFZUF.5ZC",
+      "phone": "2348088941798",
+      "regNumber": "Add",
+      "role": "student",
+      "departmentName": "Network Engineering"
     }
   ],
-  "timestamp": "2025-11-09T23:06:14.320Z"
+  "notifications": []
 }
