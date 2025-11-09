@@ -76,7 +76,7 @@ async function generateAdminBackup(): Promise<{ backupPath: string; backupData: 
   };
 
   const backupPath = path.join(process.cwd(), "data", "admin_backup.json");
-  await fs.writeFile(backupPath, JSON.stringify(backupData, null, 2));
+  await fs.writeFile(backupPath, JSON.JSON.stringify(backupData, null, 2));
 
   return { backupPath, backupData };
 }
@@ -415,6 +415,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Push notification endpoints
+  app.get("/api/push/vapid-public-key", async (req: Request, res: Response) => {
+    const { getVapidPublicKey } = await import('./webpush');
+    const publicKey = getVapidPublicKey();
+
+    if (!publicKey) {
+      return res.status(404).json({ error: "Push notifications not configured" });
+    }
+
+    res.json({ publicKey });
+  });
+
+  app.post("/api/push/subscribe", async (req: Request, res: Response) => {
+    if (!req.session.user) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    try {
+      const { endpoint, keys } = req.body;
+
+      await storage.createPushSubscription({
+        userId: req.session.user.id,
+        endpoint,
+        p256dh: keys.p256dh,
+        auth: keys.auth
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Push subscription error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/notifications", async (req: Request, res: Response) => {
     try {
       if (!req.session.user) {
@@ -491,6 +525,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: "NOTIFICATION_POSTED",
         details: { notificationId: notification.id, type: notificationType },
       });
+
+      // Send push notification to subscribed users if the notification is relevant to them
+      const subscribedUsers = await storage.getPushSubscribersForDepartment(target);
+      for (const sub of subscribedUsers) {
+        const user = await storage.getUser(sub.userId);
+        if (user && user.username !== req.session.user.username) { // Don't send notification to sender
+          try {
+            await sendPushNotification(
+              user.username, // Assuming sendPushNotification can use username to fetch subscription
+              notification.title,
+              notification.content
+            );
+          } catch (pushError) {
+            logger.error("Failed to send push notification", pushError, { userId: sub.userId });
+          }
+        }
+      }
 
       // Update local backup file immediately (without sending to Telegram)
       try {

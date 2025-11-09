@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bell, MessageSquare, FileText, User, LogOut, Settings } from "lucide-react";
 import { useAuth, useLogout } from "@/lib/auth";
+import { registerPushNotifications } from "@/lib/pushNotifications";
 
 interface Room {
   id: string;
@@ -48,6 +49,17 @@ function Router() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Register push notifications when user is authenticated
+  useEffect(() => {
+    if (user) {
+      registerPushNotifications().then(success => {
+        if (success) {
+          console.log('Push notifications enabled');
+        }
+      });
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
@@ -242,10 +254,10 @@ function Router() {
                 </div>
                 {selectedRoom ? (
                   <div className="h-[calc(100vh-200px)] border rounded-lg overflow-hidden">
-                    <ChatInterface 
+                    <ChatInterface
                       roomId={selectedRoom.id}
-                      roomName={selectedRoom.name} 
-                      currentUser={user.username} 
+                      roomName={selectedRoom.name}
+                      currentUser={user.username}
                     />
                   </div>
                 ) : (
