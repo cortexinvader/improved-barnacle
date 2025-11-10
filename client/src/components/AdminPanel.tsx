@@ -110,14 +110,17 @@ export default function AdminPanel() {
 
   const handleBackupCredentials = async () => {
     try {
-      const response = await fetch('/api/admin/backup');
+      const response = await fetch('/api/admin/backup', {
+        credentials: 'include',
+      });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Backup failed');
+        const error = await response.json();
+        throw new Error(error.error || 'Backup failed');
       }
 
-      const blob = await response.blob();
+      const text = await response.text();
+      const blob = new Blob([text], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

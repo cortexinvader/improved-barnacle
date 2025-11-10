@@ -948,6 +948,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Document download endpoint
+  app.get("/api/documents/:id/download", async (req: Request, res: Response) => {
+    try {
+      if (!req.session.user) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const doc = await storage.getDocument(req.params.id);
+      if (!doc) {
+        return res.status(404).json({ error: "Document not found" });
+      }
+
+      // Check permissions
+      if (req.session.user.role === "student" &&
+          doc.departmentName !== req.session.user.departmentName) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const filePath = path.join(process.cwd(), doc.fileUrl);
+
+      // Set proper content type based on file extension
+      const ext = path.extname(doc.fileName).toLowerCase();
+      const contentTypes: { [key: string]: string } = {
+        '.pdf': 'application/pdf',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.txt': 'text/plain',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+      };
+
+      const contentType = contentTypes[ext] || 'application/octet-stream';
+
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${doc.fileName}"`);
+      res.download(filePath, doc.fileName);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Image upload endpoint for chat
   app.post("/api/chat/upload-image", upload.single("image"), async (req: Request, res: Response) => {
     if (!req.session.user) {
