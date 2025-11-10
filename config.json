@@ -58,7 +58,7 @@
   "push": {
     "vapid_public_key": "",
     "vapid_private_key": "",
-    "contact_email": "dev@example.com"
+    "contact_email": "cortexinvader@gmail.com"
   },
   "system": {
     "backup_interval_hours": 24,
