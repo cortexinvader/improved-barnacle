@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,6 +18,24 @@ export default function GovernorPostingPanel({ role, department }: GovernorPosti
   const [postType, setPostType] = useState<"urgent" | "regular" | "cruise">("regular");
   const [targetDepartment, setTargetDepartment] = useState("");
   const [postGenerally, setPostGenerally] = useState(false);
+  const [departments, setDepartments] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch('/api/departments', {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setDepartments(data.map((dept: { name: string }) => dept.name));
+        }
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+      }
+    };
+    fetchDepartments();
+  }, []);
 
   const postTypes = [
     { value: "urgent", label: "Urgent", icon: AlertCircle, color: "text-destructive" },
@@ -117,10 +135,11 @@ export default function GovernorPostingPanel({ role, department }: GovernorPosti
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Departments</SelectItem>
-                <SelectItem value="Computer Engineering">Computer Engineering</SelectItem>
-                <SelectItem value="Information Systems">Information Systems</SelectItem>
-                <SelectItem value="Software Engineering">Software Engineering</SelectItem>
-                <SelectItem value="Network Engineering">Network Engineering</SelectItem>
+                {departments.map((dept) => (
+                  <SelectItem key={dept} value={dept}>
+                    {dept}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
