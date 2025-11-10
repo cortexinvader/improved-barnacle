@@ -88,12 +88,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const configData = await fs.readFile(configPath, "utf-8");
   const config = JSON.parse(configData);
   const sessionTimeoutMinutes = config.app?.session_timeout_minutes || 480;
+  const sessionTimeout = sessionTimeoutMinutes * 60 * 1000;
 
   const MemoryStore = memorystore(session);
   const PgSession = connectPgSimple(session);
 
   // Use PostgreSQL session store in production if DATABASE_URL is available, otherwise use MemoryStore
-  const sessionStore = process.env.DATABASE_URL 
+  const sessionStore = process.env.DATABASE_URL
     ? new PgSession({
         pool: new pg.Pool({
           connectionString: process.env.DATABASE_URL,
@@ -107,16 +108,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.use(
     session({
-      secret: process.env.SESSION_SECRET || "cie-portal-secret-key-change-in-production",
+      secret: process.env.SESSION_SECRET || "ciesa-faculty-portal-secret-key-change-in-production",
       resave: false,
       saveUninitialized: false,
-      store: sessionStore,
       cookie: {
-        maxAge: sessionTimeoutMinutes * 60 * 1000,
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: sessionTimeout,
       },
+      store: sessionStore,
+      proxy: true, // Trust first proxy (Render's load balancer)
     })
   );
 
@@ -342,8 +344,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // Students and department governors see general rooms + their department rooms
         const allRooms = await storage.getAllRooms();
-        rooms = allRooms.filter(room => 
-          room.type === "general" || 
+        rooms = allRooms.filter(room =>
+          room.type === "general" ||
           room.departmentName === user.departmentName ||
           room.departmentName === null
         );
@@ -646,7 +648,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Department governors can only delete notifications they posted or for their department
       if (req.session.user.role === "department-governor") {
-        const canDelete = 
+        const canDelete =
           notification.postedBy === req.session.user.username ||
           notification.targetDepartmentName === req.session.user.departmentName;
 
@@ -758,9 +760,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivityLog({
         userId: req.session.user.id,
         action: "CREDENTIALS_BACKUP",
-        details: { 
-          userCount: backupData.users.length, 
-          notificationCount 
+        details: {
+          userCount: backupData.users.length,
+          notificationCount
         },
       });
 
@@ -783,16 +785,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivityLog({
         userId: req.session.user.id,
         action: "TELEGRAM_BACKUP_MANUAL",
-        details: { 
-          userCount: backupData.users.length, 
-          notificationCount: backupData.notifications?.length || 0 
+        details: {
+          userCount: backupData.users.length,
+          notificationCount: backupData.notifications?.length || 0
         },
       });
 
       // Send backup via Telegram
       await sendBackupToTelegram(backupPath);
 
-      res.json({ 
+      res.json({
         message: "Backup sent to Telegram successfully",
         userCount: backupData.users.length,
         notificationCount: backupData.notifications?.length || 0
