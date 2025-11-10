@@ -91,7 +91,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <MessageSquare className="w-6 h-6 text-primary" />
-            <h1 className="text-xl font-bold">CIE Faculty Portal</h1>
+            <h1 className="text-xl font-bold">CIESA Faculty Portal</h1>
           </div>
 
           <div className="flex items-center gap-4">
